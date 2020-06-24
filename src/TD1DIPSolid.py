@@ -13,8 +13,12 @@ import ctypes as ct
 from modules.constants import *
 from modules.parameters import parameter_class
 param = parameter_class()
-param.read_parameters()   #Initialization of the parameters and the replacement from the standard input
-from modules.functions import get_hD, E_hOD, psih_Ene, h_U, Make_Efield
+#DEBUGDEBUG
+#param.read_parameters()    #Initialization of the parameters and the replacement from the standard input#
+#DEBUGDEBUG
+param.grid_constructions() #
+param.get_Nocc()           #
+from modules.functions import * #Caution!! This should be modified 
 from modules.plot_funcs import plot_E, plot_RT
 
 if (not param.cluster_mode):
@@ -23,6 +27,35 @@ if (not param.cluster_mode):
     from matplotlib import cm #To include color map
 
 #############################Prep. for the system########################
+ubkG = np.zeros([param.NG, param.NG, param.NK],dtype='complex128') #Wave function in reciprocal space
+hk = np.zeros([param.NG, param.NG, param.NK],dtype='complex128') #Hamiltonian in terms of reciprocal space
+epsbk = np.zeros([param.NG, param.NK],dtype='float64') #Hamiltonian in terms of reciprocal space
+occbk = np.zeros([param.NG, param.NK],dtype='float64') #Occupation number
+occbk[0:param.Nocc,:] = 2.0/float(param.NK)
+
+vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
+tGGk = get_tGGk(param,0.0)
+hGGk = tGGk + vGGk
+
+#Band calculation 
+for ik in range(param.NK):
+    epsbk[:,ik], ubkG[:,:,ik] = np.linalg.eigh(hGGk[:,:,ik])
+ubkG = ubkG/np.sqrt(param.a)*float(param.NG) #Normalization
+Eg = np.amin(epsbk[param.Nocc,:])-np.amax(epsbk[param.Nocc - 1,:])
+print('Eg = '+str(Eg)+' a.u. = '+str(Hartree*Eg)+' eV')
+
+if (not param.cluster_mode):
+    plt.figure()
+    plt.xlim(np.amin(param.k), np.amax(param.k))
+    plt.xlabel('$k$ [a.u.]')
+    plt.ylabel('$\epsilon_{bk}$ [eV]')
+    for ib in range(4):
+        plt.plot(param.k,epsbk[ib,:]*Hartree)
+    plt.grid()
+    plt.show()
+
+sys.exit()
+
 hD = get_hD(param)
 hOD = E_hOD(param,0.0)
 h = hD + hOD

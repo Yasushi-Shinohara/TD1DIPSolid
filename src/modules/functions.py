@@ -7,6 +7,39 @@ import math
 import numpy as np
 from modules.constants import *
 #
+def get_vxvGvGGvGGk(param):
+    alpha = 5.0e-2
+    beta = 5.0e-2
+    gamma = 1.0e-1
+    v0 =  0.37
+    vx = -v0*(1.0+np.cos(tpi*param.x/param.a))
+    vG = np.fft.fft(vx)/np.float(param.NG)
+    vGG = np.zeros([param.NG, param.NG], dtype='complex128') 
+    for ig1 in range(param.NG):
+        gind = np.remainder(ig1 - np.arange(param.NG), param.NG)
+        for ig2 in range(param.NG):
+            igloc = gind[ig2]
+            vGG[ig1,ig2] = vG[igloc] #This definition should be carefully checked 
+    vGGk = np.zeros([param.NG, param.NG, param.NK], dtype='complex128')
+    for ik in range(param.NK):
+        vGGk[:,:,ik] = 1.0*vGG[:,:]
+    if(not param.cluster_mode):
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.plot(param.x,vx,label='The local potential')
+        plt.grid()
+        plt.legend()
+        plt.show()
+    return vx, vG, vGG, vGGk
+#
+def get_tGGk(param, A):
+    tGGk = np.zeros([param.NG, param.NG, param.NK],dtype='complex128')
+    for ik in range(param.NK):
+        kpA = param.k[ik] + A
+        for ig in range(param.NG):
+            tGGk[ig, ig ,ik] = tGGk[ig, ig, ik] + 0.5*(param.G[ig] + kpA)**2
+    return tGGk
+
 def get_hD(param):
     hD = np.zeros([2,2],dtype=np.complex128)
     hD[0,0] = 0.5*param.Delta

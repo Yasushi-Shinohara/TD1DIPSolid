@@ -7,14 +7,28 @@ import numpy as np
 
 class parameter_class:
     def __init__(self):
-        #Default values for the parameters
+        # Default values for the parameters
+        ## system
+        self.sys_name = ''            #Prefix of the output files
         self.cluster_mode = False
         self.PC_option = True         #Predictor-corrector option
         self.minimal_output = True    #A flag to write-out minimal data or not
-        self.a = 10.0                 #A spatial dimension constant that the dipole : d = e*a
-        self.Delta = 9.0/Hartree      #The Gap of the two-level system in a.u.
+        ## System info.
+        self.a = 10.0                 #The lattice constant
+        self.b = None                 #The reciprocal lattice vector, tpi/a
+        self.v0 = 9.0/Hartree         #The depth of the local potential
+        self.Nave = 4.0               #Number of electron in the cell, doubly degenerated due to the spin
+        self.Nocc = None              #Number of occupied levels, int(Nave/2)
+        ## Numerical discretization
+        self.NG = 12                  #Number of spatial grid
+        self.H = None                 #Spatial grid size, a/NG
+        self.x = None                 #Spatial grid
+        self.NK = 20                  #Number of Brillouin zone sampling
+        self.k = None                 #k-grid
+        ## Time propagation
         self.dt = 5.0e-1              #The size of the time-step
         self.Nt = 4000                #The number of time steps
+        ## Field parameters
         self.Ncolor = 1               #Number of color for the field
         self.omegac = 1.55/Hartree    #Photon energy
         self.phi_CEP = 0.0/tpi        #Carrier envelope phase
@@ -144,3 +158,14 @@ class parameter_class:
                 print('# E0 =', self.E0[icolor], ' [a.u.] =', self.E0[icolor]*Atomfield, ' [V/nm]') 
                 print('# e*a*E0 =', self.a*self.E0[icolor], ' [a.u.] =', self.a*self.E0[icolor]*Hartree, ' [eV]')
 
+    def grid_constructions(self):
+        self.b = tpi/self.a
+        self.H = self.a/np.float(self.NG)
+        self.x = np.linspace(0.0, self.a, num=self.NG, endpoint=False, dtype='float64')
+        self.G = np.fft.fftfreq(self.NG)*(self.b*np.float(self.NG))
+        #Brillouin zone construction
+        self.k = np.linspace(-0.5*self.b, 0.5*self.b, num=self.NK, endpoint=False, dtype='float64')
+        self.k = self.k + (0.5*self.b)/np.float(self.NK)
+
+    def get_Nocc(self):
+        self.Nocc = int(self.Nave/2.0)
