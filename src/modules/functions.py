@@ -76,22 +76,27 @@ def h_U(param,h):
 #
 def Make_Efield(param):
     t = np.zeros([param.Nt],dtype=np.float64)
-#    E = np.zeros([param.Nt],dtype=np.float64)
-    E = np.zeros([param.Nt,param.Ncolor],dtype=np.float64)
+    E = np.zeros([param.Nt],dtype=np.float64)
+    A = np.zeros([param.Nt,param.Ncolor],dtype=np.float64)
     for it in range(param.Nt):
         t[it] = param.dt*it
     if (param.Ncolor == 1):
         icolor = 0
         for it in range(param.Nt):
             if (t[it] < param.Tpulse):
-                E[it,icolor] = param.E0*(np.sin(pi*t[it]/param.Tpulse))**param.nenvelope*np.sin(param.omegac*(t[it] - 0.5*param.Tpulse) + param.phi_CEP)
+                A[it,icolor] = (param.E0/param.omegac)*(np.sin(pi*t[it]/param.Tpulse))**param.nenvelope*np.cos(param.omegac*(t[it] - 0.5*param.Tpulse) + param.phi_CEP)
     elif (param.Ncolor > 1):
         for icolor in range(param.Ncolor):
             for it in range(param.Nt):
                 if (t[it] < param.Tpulse[icolor]):
-                    E[it,icolor] = param.E0[icolor]*(np.sin(pi*t[it]/param.Tpulse[icolor]))**param.nenvelope[icolor]*np.sin(param.omegac[icolor]*(t[it] - 0.5*param.Tpulse[icolor]) + param.phi_CEP[icolor])
-        E = np.sum(E,axis=1)
+                    A[it,icolor] = (param.E0[icolor]/param.omegac[icolor])*(np.sin(pi*t[it]/param.Tpulse[icolor]))**param.nenvelope[icolor]*np.cos(param.omegac[icolor]*(t[it] - 0.5*param.Tpulse[icolor]) + param.phi_CEP[icolor])
+        A = np.sum(E,axis=1)
     else :
         print('ERROR: The parameter '+str(param.Ncolor)+' is improper.')
         sys.exit()
-    return t, E
+
+    for it in range(1,param.Nt-1):
+        E[it] = -(A[it+1] - A[it-1])/2.0/param.dt
+    E[0] = 2.0*E[1] - E[2]
+    E[param.Nt-1] = 2.0*E[param.Nt-2] - E[param.Nt-3]    
+    return t, A, E

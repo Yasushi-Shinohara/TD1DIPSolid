@@ -70,7 +70,7 @@ print('# System energy at initial:',Etot, '[a.u.] =',Etot*Hartree, ' [eV]')
 #sys.exit()
 
 #############################Prep. for RT################################
-t, E = Make_Efield(param)
+t, A, E = Make_Efield(param)
 if (param.PC_option):
     Eave = 0.0*E
     for it in range(param.Nt-1):
