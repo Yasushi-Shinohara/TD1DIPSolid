@@ -59,15 +59,14 @@ def occbkuGbk_J(param,occbk,uGbk,A): #Exact formula should be checked=========
             J = J + occbk[ib,ik]*(np.sum(param.G[:]*(np.abs(uGbk[:,ib,ik]))**2)*param.a/float(param.NG**2) + kpA)
     return J/param.a
 
-def occbkuGbk_Etot(param,occbk,uGbk,A): #Exact formula should be checked=========
-    Etot = 0.0
-    vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
-    hk = get_tGGk(param,0.0) + vGGk 
+def occbkuGbkhGGk_Ene(param,occbk,uGbk, hGGk): #Exact formula should be checked=========
+    Ene = 0.0
+    hk = 1.0*hGGk
     for ik in range(param.NK):
         hubG = np.dot(hk[:,:,ik], uGbk[:,:,ik])
         for ib in range(param.NG):
-            Etot = Etot + occbk[ib,ik]*np.real(np.vdot(uGbk[:,ib,ik],hubG[:,ib]))
-    return Etot*param.a/float(param.NG**2) #orbital function is normalized to give correct number of particle in the cell.
+            Ene = Ene + occbk[ib,ik]*np.real(np.vdot(uGbk[:,ib,ik],hubG[:,ib]))
+    return Ene*param.a/float(param.NG**2) #orbital function is normalized to give correct number of particle in the cell.
 #
 def h_U(param,h):
     w, v = np.linalg.eigh(h)

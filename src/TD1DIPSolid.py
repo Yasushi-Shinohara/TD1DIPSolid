@@ -63,9 +63,9 @@ dns = occbkuGbk_dns(param,occbk,uGbk)
 print('## Check for dns, '+str(np.sum(dns)*param.H))
 J = occbkuGbk_J(param,occbk,uGbk,0.0) #Matter current
 print('## Check for current, '+str(J))
-Etot = occbkuGbk_Etot(param,occbk,uGbk,0.0)
-print('## Check for Etot, '+str(Etot))
-print('# System energy at initial:',Etot, '[a.u.] =',Etot*Hartree, ' [eV]')
+Ene = occbkuGbkhGGk_Ene(param,occbk,uGbk,hGGk)
+print('## Check for Ene, '+str(Ene))
+print('# System energy at initial:',Ene, '[a.u.] =',Ene*Hartree, ' [eV]')
 
 #sys.exit()
 
@@ -82,6 +82,7 @@ if (param.PC_option):
 nv = np.zeros([param.Nt],dtype=np.float64)
 nc = np.zeros([param.Nt],dtype=np.float64)
 Ene = np.zeros([param.Nt],dtype=np.float64)
+J = np.zeros([param.Nt],dtype=np.float64)
 
 if (np.amax(t) < np.amax(param.Tpulse)):
     print('# WARNING: max(t) is shorter than Tpulse')
@@ -96,7 +97,6 @@ print_midtime(ts,tt)
 #############################RT calculation##############################
 #Time-propagation
 from modules.RT_propagation import RT_propagation_class
-from modules.RT_propagation import RT_propagation_class
 from modules.parameters import parameter_class
 RTc = RT_propagation_class()
 RT_option = 'exp'
@@ -107,19 +107,17 @@ else :
     sys.exit()
 
 for it in range(param.Nt):
+    J[it] = occbkuGbk_J(param,occbk,uGbk,A[it])
+    Ene[it] = occbkuGbkhGGk_Ene(param,occbk,uGbk,hGGk)
     if (param.PC_option):
         tGGk = get_tGGk(param,Aave[it])
     else:
-        tGGk = get_tGGk(param,Aave[it])
+        tGGk = get_tGGk(param,A[it])
     hGGk = tGGk + vGGk
     uGbk = uGbkhkGG2uGbk(param, uGbk, hGGk)
-    #nv[it] = (np.abs(psi[0]))**2
-    #nc[it] = (np.abs(psi[1]))**2
-    #norm = np.linalg.norm(psi)
-    #Ene[it] = psih_Ene(psi,h)
     if (it%1000 == 0):
-        #print('# ',it, Ene[it], norm)
-        print('# ',it)
+        dns = occbkuGbk_dns(param,occbk,uGbk)
+        print(it,np.sum(dns)*param.H, J[it], Ene[it])
 
 print('# System energy at end:',Ene[param.Nt-1], '[a.u.] =',Ene[param.Nt-1]*Hartree, ' [eV]')
 print('# Absorbed energy:',Ene[param.Nt-1]-Ene[0], '[a.u.] =',(Ene[param.Nt-1]-Ene[0])*Hartree, ' [eV]')
