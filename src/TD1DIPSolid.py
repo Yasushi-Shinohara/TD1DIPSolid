@@ -54,17 +54,19 @@ if (not param.cluster_mode):
     plt.grid()
     plt.show()
 
-sys.exit()
+print('Band calculation is done properly.    ')
+print('######################################')
 
-hD = get_hD(param)
-hOD = E_hOD(param,0.0)
-h = hD + hOD
+#Ene = psih_Ene(psi,h)
+#Ene = 
+dns = occbkubkG_dns(param,occbk,ubkG)
+print('## Check for dns, '+str(np.sum(dns)*param.H))
+J = occbkubkG_J(param,occbk,ubkG,0.0) #Matter current
+print('## Check for current, '+str(J))
+Etot = occbkubkG_Etot(param,occbk,ubkG,0.0)
+print('## Check for Etot, '+str(Etot))
+print('# System energy at initial:',Etot, '[a.u.] =',Etot*Hartree, ' [eV]')
 
-psi = np.zeros([2],dtype=np.complex128)
-psi[1] = 1.0  #Lower level is initailly fully occupied
-
-Ene = psih_Ene(psi,h)
-print('# System energy at initial:',Ene, '[a.u.] =',Ene*Hartree, ' [eV]')
 #sys.exit()
 
 #############################Prep. for RT################################
@@ -87,6 +89,7 @@ if (not param.cluster_mode):
 
 tt = time.time()
 print_midtime(ts,tt)
+sys.exit()
 #############################RT calculation##############################
 #Time-propagation
 for it in range(param.Nt):

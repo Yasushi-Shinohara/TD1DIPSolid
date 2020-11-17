@@ -40,21 +40,34 @@ def get_tGGk(param, A):
             tGGk[ig, ig ,ik] = tGGk[ig, ig, ik] + 0.5*(param.G[ig] + kpA)**2
     return tGGk
 
-def get_hD(param):
-    hD = np.zeros([2,2],dtype=np.complex128)
-    hD[0,0] = 0.5*param.Delta
-    hD[1,1] = -0.5*param.Delta
-    return hD
-#
-def E_hOD(param,E):
-    hOD = np.zeros([2,2],dtype=np.complex128)
-    hOD[0,1] = -param.a*E                     #The negative sign is from elementary charge of electron
-    hOD[1,0] = np.conj(hOD[0,1])
-    return hOD
-#
-def psih_Ene(psi,h):
-    Ene = np.vdot(psi,np.dot(h,psi))
-    return np.real(Ene)
+#Relevant functions
+def occbkubkG_dns(param,occbk,ubkG):
+    dns = np.zeros(param.NG,dtype='float64')
+    work = np.empty_like(ubkG[:,0,0])
+    NBact = np.shape(ubkG)[1]
+    for ik in range(param.NK):
+        for ib in range(NBact):
+            work = np.fft.ifft(ubkG[:,ib,ik])
+            dns = dns + occbk[ib,ik]*(np.abs(work))**2
+    return dns
+
+def occbkubkG_J(param,occbk,ubkG,A): #Exact formula should be checked=========
+    J = 0.0
+    for ik in range(param.NK):
+        kpA = param.k[ik] + A
+        for ib in range(param.NG):
+            J = J + occbk[ib,ik]*(np.sum(param.G[:]*(np.abs(ubkG[:,ib,ik]))**2)*param.a/float(param.NG**2) + kpA)
+    return J/param.a
+
+def occbkubkG_Etot(param,occbk,ubkG,A): #Exact formula should be checked=========
+    Etot = 0.0
+    vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
+    hk = get_tGGk(param,0.0) + vGGk 
+    for ik in range(param.NK):
+        hubG = np.dot(hk[:,:,ik], ubkG[:,:,ik])
+        for ib in range(param.NG):
+            Etot = Etot + occbk[ib,ik]*np.real(np.vdot(ubkG[:,ib,ik],hubG[:,ib]))
+    return Etot*param.a/float(param.NG**2) #orbital function is normalized to give correct number of particle in the cell.
 #
 def h_U(param,h):
     w, v = np.linalg.eigh(h)
@@ -67,9 +80,18 @@ def Make_Efield(param):
     E = np.zeros([param.Nt,param.Ncolor],dtype=np.float64)
     for it in range(param.Nt):
         t[it] = param.dt*it
-    for icolor in range(param.Ncolor):
+    if (param.Ncolor == 1):
+        icolor = 0
         for it in range(param.Nt):
-            if (t[it] < param.Tpulse[icolor]):
-                E[it,icolor] = param.E0[icolor]*(np.sin(pi*t[it]/param.Tpulse[icolor]))**param.nenvelope[icolor]*np.sin(param.omegac[icolor]*(t[it] - 0.5*param.Tpulse[icolor]) + param.phi_CEP[icolor])
-    E = np.sum(E,axis=1)
+            if (t[it] < param.Tpulse):
+                E[it,icolor] = param.E0*(np.sin(pi*t[it]/param.Tpulse))**param.nenvelope*np.sin(param.omegac*(t[it] - 0.5*param.Tpulse) + param.phi_CEP)
+    elif (param.Ncolor > 1):
+        for icolor in range(param.Ncolor):
+            for it in range(param.Nt):
+                if (t[it] < param.Tpulse[icolor]):
+                    E[it,icolor] = param.E0[icolor]*(np.sin(pi*t[it]/param.Tpulse[icolor]))**param.nenvelope[icolor]*np.sin(param.omegac[icolor]*(t[it] - 0.5*param.Tpulse[icolor]) + param.phi_CEP[icolor])
+        E = np.sum(E,axis=1)
+    else :
+        print('ERROR: The parameter '+str(param.Ncolor)+' is improper.')
+        sys.exit()
     return t, E
