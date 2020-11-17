@@ -41,32 +41,32 @@ def get_tGGk(param, A):
     return tGGk
 
 #Relevant functions
-def occbkubkG_dns(param,occbk,ubkG):
+def occbkuGbk_dns(param,occbk,uGbk):
     dns = np.zeros(param.NG,dtype='float64')
-    work = np.empty_like(ubkG[:,0,0])
-    NBact = np.shape(ubkG)[1]
+    work = np.empty_like(uGbk[:,0,0])
+    NBact = np.shape(uGbk)[1]
     for ik in range(param.NK):
         for ib in range(NBact):
-            work = np.fft.ifft(ubkG[:,ib,ik])
+            work = np.fft.ifft(uGbk[:,ib,ik])
             dns = dns + occbk[ib,ik]*(np.abs(work))**2
     return dns
 
-def occbkubkG_J(param,occbk,ubkG,A): #Exact formula should be checked=========
+def occbkuGbk_J(param,occbk,uGbk,A): #Exact formula should be checked=========
     J = 0.0
     for ik in range(param.NK):
         kpA = param.k[ik] + A
         for ib in range(param.NG):
-            J = J + occbk[ib,ik]*(np.sum(param.G[:]*(np.abs(ubkG[:,ib,ik]))**2)*param.a/float(param.NG**2) + kpA)
+            J = J + occbk[ib,ik]*(np.sum(param.G[:]*(np.abs(uGbk[:,ib,ik]))**2)*param.a/float(param.NG**2) + kpA)
     return J/param.a
 
-def occbkubkG_Etot(param,occbk,ubkG,A): #Exact formula should be checked=========
+def occbkuGbk_Etot(param,occbk,uGbk,A): #Exact formula should be checked=========
     Etot = 0.0
     vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
     hk = get_tGGk(param,0.0) + vGGk 
     for ik in range(param.NK):
-        hubG = np.dot(hk[:,:,ik], ubkG[:,:,ik])
+        hubG = np.dot(hk[:,:,ik], uGbk[:,:,ik])
         for ib in range(param.NG):
-            Etot = Etot + occbk[ib,ik]*np.real(np.vdot(ubkG[:,ib,ik],hubG[:,ib]))
+            Etot = Etot + occbk[ib,ik]*np.real(np.vdot(uGbk[:,ib,ik],hubG[:,ib]))
     return Etot*param.a/float(param.NG**2) #orbital function is normalized to give correct number of particle in the cell.
 #
 def h_U(param,h):

@@ -27,8 +27,8 @@ if (not param.cluster_mode):
     from matplotlib import cm #To include color map
 
 #############################Prep. for the system########################
-ubkG = np.zeros([param.NG, param.NG, param.NK],dtype='complex128') #Wave function in reciprocal space
-hk = np.zeros([param.NG, param.NG, param.NK],dtype='complex128') #Hamiltonian in terms of reciprocal space
+uGbk = np.zeros([param.NG, param.NG, param.NK],dtype='complex128') #Wave function in reciprocal space
+hGGk = np.zeros([param.NG, param.NG, param.NK],dtype='complex128') #Hamiltonian in terms of reciprocal space
 epsbk = np.zeros([param.NG, param.NK],dtype='float64') #Hamiltonian in terms of reciprocal space
 occbk = np.zeros([param.NG, param.NK],dtype='float64') #Occupation number
 occbk[0:param.Nocc,:] = 2.0/float(param.NK)
@@ -39,8 +39,8 @@ hGGk = tGGk + vGGk
 
 #Band calculation 
 for ik in range(param.NK):
-    epsbk[:,ik], ubkG[:,:,ik] = np.linalg.eigh(hGGk[:,:,ik])
-ubkG = ubkG/np.sqrt(param.a)*float(param.NG) #Normalization
+    epsbk[:,ik], uGbk[:,:,ik] = np.linalg.eigh(hGGk[:,:,ik])
+uGbk = uGbk/np.sqrt(param.a)*float(param.NG) #Normalization
 Eg = np.amin(epsbk[param.Nocc,:])-np.amax(epsbk[param.Nocc - 1,:])
 print('Eg = '+str(Eg)+' a.u. = '+str(Hartree*Eg)+' eV')
 
@@ -59,11 +59,11 @@ print('######################################')
 
 #Ene = psih_Ene(psi,h)
 #Ene = 
-dns = occbkubkG_dns(param,occbk,ubkG)
+dns = occbkuGbk_dns(param,occbk,uGbk)
 print('## Check for dns, '+str(np.sum(dns)*param.H))
-J = occbkubkG_J(param,occbk,ubkG,0.0) #Matter current
+J = occbkuGbk_J(param,occbk,uGbk,0.0) #Matter current
 print('## Check for current, '+str(J))
-Etot = occbkubkG_Etot(param,occbk,ubkG,0.0)
+Etot = occbkuGbk_Etot(param,occbk,uGbk,0.0)
 print('## Check for Etot, '+str(Etot))
 print('# System energy at initial:',Etot, '[a.u.] =',Etot*Hartree, ' [eV]')
 
@@ -73,9 +73,12 @@ print('# System energy at initial:',Etot, '[a.u.] =',Etot*Hartree, ' [eV]')
 t, A, E = Make_Efield(param)
 if (param.PC_option):
     Eave = 0.0*E
+    Aave = 0.0*A
     for it in range(param.Nt-1):
         Eave[it] = 0.5*(E[it] + E[it+1])
+        Aave[it] = 0.5*(A[it] + A[it+1])
     Eave[param.Nt - 1] = 1.0*Eave[param.Nt - 2]
+    Aave[param.Nt - 1] = 1.0*Aave[param.Nt - 2]
 nv = np.zeros([param.Nt],dtype=np.float64)
 nc = np.zeros([param.Nt],dtype=np.float64)
 Ene = np.zeros([param.Nt],dtype=np.float64)
@@ -89,23 +92,34 @@ if (not param.cluster_mode):
 
 tt = time.time()
 print_midtime(ts,tt)
-sys.exit()
+#sys.exit()
 #############################RT calculation##############################
 #Time-propagation
+from modules.RT_propagation import RT_propagation_class
+from modules.RT_propagation import RT_propagation_class
+from modules.parameters import parameter_class
+RTc = RT_propagation_class()
+RT_option = 'exp'
+if (RT_option == 'exp'):
+    uGbkhkGG2uGbk = RTc.uGbkhGGk2uGbk_exp
+else :
+    print('# ERROR: undefined RT_option is called.')
+    sys.exit()
+
 for it in range(param.Nt):
     if (param.PC_option):
-        hOD = E_hOD(param,Eave[it])
+        tGGk = get_tGGk(param,Aave[it])
     else:
-        hOD = E_hOD(param,E[it])
-    h = hD + hOD
-    U = h_U(param,h)
-    psi = np.dot(U, psi)
-    nv[it] = (np.abs(psi[0]))**2
-    nc[it] = (np.abs(psi[1]))**2
-    norm = np.linalg.norm(psi)
-    Ene[it] = psih_Ene(psi,h)
+        tGGk = get_tGGk(param,Aave[it])
+    hGGk = tGGk + vGGk
+    uGbk = uGbkhkGG2uGbk(param, uGbk, hGGk)
+    #nv[it] = (np.abs(psi[0]))**2
+    #nc[it] = (np.abs(psi[1]))**2
+    #norm = np.linalg.norm(psi)
+    #Ene[it] = psih_Ene(psi,h)
     if (it%1000 == 0):
-        print('# ',it, Ene[it], norm)
+        #print('# ',it, Ene[it], norm)
+        print('# ',it)
 
 print('# System energy at end:',Ene[param.Nt-1], '[a.u.] =',Ene[param.Nt-1]*Hartree, ' [eV]')
 print('# Absorbed energy:',Ene[param.Nt-1]-Ene[0], '[a.u.] =',(Ene[param.Nt-1]-Ene[0])*Hartree, ' [eV]')
