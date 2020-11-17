@@ -69,12 +69,21 @@ class parameter_class:
                         self.minimal_output = False
                 if (str(text[i]) == 'a'):
                     self.a = float(str(text[i+1]))
-                if (str(text[i]) == 'Delta'):
-                    self.Delta = float(str(text[i+1]))
+                if (str(text[i]) == 'v0'):
+                    self.v0 = float(str(text[i+1]))
+                    
+                if (str(text[i]) == 'Nave'):
+                    self.Nave = int(str(text[i+1]))
+                if (str(text[i]) == 'NG'):
+                    self.NG = int(str(text[i+1]))
+                if (str(text[i]) == 'NK'):
+                    self.NK = int(str(text[i+1]))
+
                 if (str(text[i]) == 'dt'):
                     self.dt = float(str(text[i+1]))
                 if (str(text[i]) == 'Nt'):
                     self.Nt = int(str(text[i+1]))
+
                 if (str(text[i]) == 'Ncolor'):
                     self.Ncolor = int(str(text[i+1]))
                 if (str(text[i]) == 'Tpulse'):
@@ -134,7 +143,10 @@ class parameter_class:
         print('# PC_option =', self.PC_option)
         print('# minimal_output =', self.minimal_output)
         print('# a =', self.a, ' [a.u.] =',self.a*aB, ' [nm]')
-        print('# Delta =', self.Delta, ' [a.u.] =', self.Delta*Hartree, ' [eV]') 
+        print('# v0 =', self.v0, ' [a.u.] =', self.v0*Hartree, ' [eV]') 
+        print('# Nave =', self.Nave) 
+        print('# NG =', self.NG) 
+        print('# NK =', self.NK) 
         print('# dt =', self.dt, ' [a.u.] =', self.dt*Atomtime, ' [fs]') 
         print('# Nt =', self.Nt) 
         print('# Nt*dt =', self.Nt*self.dt, '[a.u.] =', self.Nt*self.dt*Atomtime, '[fs]')

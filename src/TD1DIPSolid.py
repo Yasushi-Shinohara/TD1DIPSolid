@@ -14,7 +14,7 @@ from modules.constants import *
 from modules.parameters import parameter_class
 param = parameter_class()
 #DEBUGDEBUG
-#param.read_parameters()    #Initialization of the parameters and the replacement from the standard input#
+param.read_parameters()    #Initialization of the parameters and the replacement from the standard input#
 #DEBUGDEBUG
 param.grid_constructions() #
 param.get_Nocc()           #
