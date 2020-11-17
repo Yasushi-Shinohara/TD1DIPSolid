@@ -18,7 +18,7 @@ class RT_propagation_class():
         
 
     def uGbkhGGk2uGbk_exp(self, param, uGbk, hGGk):
-        for ik in range(param.NK):
+        for ik in range(param.Nk):
             U = self.hdt2U(hGGk[:,:,ik]*param.dt)
             uGbk[:,:,ik] = np.dot(U, uGbk[:,:,ik])
         return uGbk

@@ -20,14 +20,14 @@ def get_vxvGvGGvGGk(param):
         for ig2 in range(param.NG):
             igloc = gind[ig2]
             vGG[ig1,ig2] = vG[igloc] #This definition should be carefully checked 
-    vGGk = np.zeros([param.NG, param.NG, param.NK], dtype='complex128')
-    for ik in range(param.NK):
+    vGGk = np.zeros([param.NG, param.NG, param.Nk], dtype='complex128')
+    for ik in range(param.Nk):
         vGGk[:,:,ik] = 1.0*vGG[:,:]
     return vx, vG, vGG, vGGk
 #
 def get_tGGk(param, A):
-    tGGk = np.zeros([param.NG, param.NG, param.NK],dtype='complex128')
-    for ik in range(param.NK):
+    tGGk = np.zeros([param.NG, param.NG, param.Nk],dtype='complex128')
+    for ik in range(param.Nk):
         kpA = param.k[ik] + A
         for ig in range(param.NG):
             tGGk[ig, ig ,ik] = tGGk[ig, ig, ik] + 0.5*(param.G[ig] + kpA)**2
@@ -38,7 +38,7 @@ def occbkuGbk_dns(param,occbk,uGbk):
     dns = np.zeros(param.NG,dtype='float64')
     work = np.empty_like(uGbk[:,0,0])
     NBact = np.shape(uGbk)[1]
-    for ik in range(param.NK):
+    for ik in range(param.Nk):
         for ib in range(NBact):
             work = np.fft.ifft(uGbk[:,ib,ik])
             dns = dns + occbk[ib,ik]*(np.abs(work))**2
@@ -46,7 +46,7 @@ def occbkuGbk_dns(param,occbk,uGbk):
 
 def occbkuGbk_J(param,occbk,uGbk,A): #Exact formula should be checked=========
     J = 0.0
-    for ik in range(param.NK):
+    for ik in range(param.Nk):
         kpA = param.k[ik] + A
         for ib in range(param.NG):
             J = J + occbk[ib,ik]*(np.sum(param.G[:]*(np.abs(uGbk[:,ib,ik]))**2)*param.a/float(param.NG**2) + kpA)
@@ -55,7 +55,7 @@ def occbkuGbk_J(param,occbk,uGbk,A): #Exact formula should be checked=========
 def occbkuGbkhGGk_Ene(param,occbk,uGbk, hGGk): #Exact formula should be checked=========
     Ene = 0.0
     hk = 1.0*hGGk
-    for ik in range(param.NK):
+    for ik in range(param.Nk):
         hubG = np.dot(hk[:,:,ik], uGbk[:,:,ik])
         for ib in range(param.NG):
             Ene = Ene + occbk[ib,ik]*np.real(np.vdot(uGbk[:,ib,ik],hubG[:,ib]))
@@ -88,3 +88,12 @@ def Make_Efield(param):
     E[0] = 2.0*E[1] - E[2]
     E[param.Nt-1] = 2.0*E[param.Nt-2] - E[param.Nt-3]    
     return t, A, E
+
+#
+def ft2ftave(ft):
+    ftave = 0.0*ft
+    Nt = len(ft)
+    for it in range(Nt-1):
+        ftave[it] = 0.5*(ft[it] + ft[it+1])
+    ftave[Nt - 1] = 2.0*ftave[Nt - 2] - ftave[Nt-3]
+    return ftave

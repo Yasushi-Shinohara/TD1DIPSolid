@@ -4,6 +4,14 @@
 # This is lastly modified 2020/04/20 by Y. Shinohara
 from modules.constants import *
 
+def plot_potential(plt,cm, param, vx):
+    plt.figure()
+    plt.ylabel('Energy [a.u.]')
+    plt.plot(param.x,vx,label='The local potential')
+    plt.grid()
+    plt.legend()
+    plt.show()
+#
 def plot_band(plt,cm, param, epsbk, Nbandmax = 4):
     plt.figure()
     plt.xlim(np.amin(param.k), np.amax(param.k))
@@ -16,13 +24,12 @@ def plot_band(plt,cm, param, epsbk, Nbandmax = 4):
 #
 def plot_AE(plt,cm, param, t, A, E):
     plt.figure()
-    plt.title('Vector potential')
     plt.xlabel('Time [fs]')
-    plt.ylabel('Field strength [V/nm]')
+    plt.ylabel('Vector potential [/nm]')
     plt.xlim(0.0,np.amax(t)*Atomtime)
-    plt.plot(t*Atomtime,A)
-    plt.plot(t*Atomtime,param.b*np.ones(param.Nt)/2.0)
-    plt.plot(t*Atomtime,-param.b*np.ones(param.Nt)/2.0)
+    plt.plot(t*Atomtime,A/aB)
+    plt.plot(t*Atomtime,param.b*np.ones(param.Nt)/2.0/aB)
+    plt.plot(t*Atomtime,-param.b*np.ones(param.Nt)/2.0/aB)
     plt.grid()
     plt.show()
 #

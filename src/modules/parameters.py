@@ -2,7 +2,7 @@
 # This is created 2020/04/17 by Y. Shinohara
 # This is lastly modified 2020/05/20 by Y. Shinohara
 import sys
-from modules.constants import tpi, Atomtime, Hartree, Atomfield, aB
+from modules.constants import pi,tpi, Atomtime, Hartree, Atomfield, aB
 import numpy as np
 
 class parameter_class:
@@ -23,9 +23,10 @@ class parameter_class:
         self.NG = 12                  #Number of spatial grid
         self.H = None                 #Spatial grid size, a/NG
         self.x = None                 #Spatial grid
-        self.NK = 20                  #Number of Brillouin zone sampling
+        self.Nk = 20                  #Number of Brillouin zone sampling
         self.k = None                 #k-grid
         ## Time propagation
+        self.RT_option = 'exp'        #The size of the time-step
         self.dt = 5.0e-1              #The size of the time-step
         self.Nt = 4000                #The number of time steps
         ## Field parameters
@@ -76,8 +77,8 @@ class parameter_class:
                     self.Nave = int(str(text[i+1]))
                 if (str(text[i]) == 'NG'):
                     self.NG = int(str(text[i+1]))
-                if (str(text[i]) == 'NK'):
-                    self.NK = int(str(text[i+1]))
+                if (str(text[i]) == 'Nk'):
+                    self.Nk = int(str(text[i+1]))
 
                 if (str(text[i]) == 'dt'):
                     self.dt = float(str(text[i+1]))
@@ -142,29 +143,41 @@ class parameter_class:
         print('# cluster_mode =', self.cluster_mode)
         print('# PC_option =', self.PC_option)
         print('# minimal_output =', self.minimal_output)
+        print('# ')
         print('# a =', self.a, ' [a.u.] =',self.a*aB, ' [nm]')
         print('# v0 =', self.v0, ' [a.u.] =', self.v0*Hartree, ' [eV]') 
         print('# Nave =', self.Nave) 
+        print('# ')
         print('# NG =', self.NG) 
-        print('# NK =', self.NK) 
+        print('# Nk =', self.Nk) 
+        print('# ')
+        print('# RT_option =', self.RT_option) 
         print('# dt =', self.dt, ' [a.u.] =', self.dt*Atomtime, ' [fs]') 
+        print('# 2pi/dt =', tpi/self.dt, ' [a.u.] =', tpi/self.dt*Hartree, ' [eV]') 
         print('# Nt =', self.Nt) 
         print('# Nt*dt =', self.Nt*self.dt, '[a.u.] =', self.Nt*self.dt*Atomtime, '[fs]')
-        print('# Number of color Ncolor = ', self.Ncolor)
+        print('# 2pi/(Nt*dt) =', tpi/(self.Nt*self.dt), '[a.u.] =', tpi/(self.Nt*self.dt)*Hartree, '[eV]')
+        print('# ')
+        print('# Number of color: Ncolor = ', self.Ncolor)
         if (self.Ncolor == 1):
             print('# Tpulse =', self.Tpulse, ' [a.u.] =', self.Tpulse*Atomtime, ' [fs]') 
+            print('# 2pi/Tpulse =', tpi/self.Tpulse, ' [a.u.] =', tpi/self.Tpulse*Hartree, ' [eV]') 
             print('# nenvelope =', self.nenvelope) 
             print('# omegac =', self.omegac, ' [a.u.] =', self.omegac*Hartree, ' [eV]') 
+            print('# tpi/omegac =', tpi/self.omegac, ' [a.u.] =', tpi/self.omegac*Atomtime, ' [fs]') 
             print('# phi_CEP =', self.phi_CEP, ' [2 pi]')
             self.phi_CEP = tpi*self.phi_CEP
             print('# E0 =', self.E0, ' [a.u.] =', self.E0*Atomfield, ' [V/nm]') 
             print('# e*a*E0 =', self.a*self.E0, ' [a.u.] =', self.a*self.E0*Hartree, ' [eV]')
+            print('# E0/omegac =', self.E0/self.omegac, ' [a.u.] =', self.E0/self.omegac/aB, ' [/nm]') 
         else:
             for icolor in range(self.Ncolor):
                 print('# =====', icolor,'th color ========')
                 print('# Tpulse =', self.Tpulse[icolor], ' [a.u.] =', self.Tpulse[icolor]*Atomtime, ' [fs]') 
+                print('# 2pi/Tpulse =', tpi/self.Tpulse[icolor], ' [a.u.] =', tpi/self.Tpulse[icolor]*Hartree, ' [eV]') 
                 print('# nenvelope =', self.nenvelope[icolor]) 
                 print('# omegac =', self.omegac[icolor], ' [a.u.] =', self.omegac[icolor]*Hartree, ' [eV]') 
+                print('# tpi/omegac =', tpi/self.omegac[icolor], ' [a.u.] =', tpi/self.omegac[icolor]*Atomtime, ' [fs]') 
                 print('# phi_CEP =', self.phi_CEP[icolor], ' [2 pi]')
                 self.phi_CEP[icolor] = tpi*self.phi_CEP[icolor]
                 print('# E0 =', self.E0[icolor], ' [a.u.] =', self.E0[icolor]*Atomfield, ' [V/nm]') 
@@ -176,8 +189,14 @@ class parameter_class:
         self.x = np.linspace(0.0, self.a, num=self.NG, endpoint=False, dtype='float64')
         self.G = np.fft.fftfreq(self.NG)*(self.b*np.float(self.NG))
         #Brillouin zone construction
-        self.k = np.linspace(-0.5*self.b, 0.5*self.b, num=self.NK, endpoint=False, dtype='float64')
-        self.k = self.k + (0.5*self.b)/np.float(self.NK)
+        self.k = np.linspace(-0.5*self.b, 0.5*self.b, num=self.Nk, endpoint=False, dtype='float64')
+        self.k = self.k + (0.5*self.b)/np.float(self.Nk)
+        print('# ')
+        print('# b = 2pi/a =', self.b, ' [a.u.] =', self.b/aB, '[/nm]')
+        print('# H =', self.H, ' [a.u.] =',self.H*aB, ' [nm]')
+        print('# (pi/H)^2 =', (pi/self.H)**2, ' [a.u.] =', (pi/self.H)**2*Hartree, ' [eV]')
+        print('# Nk*a =', self.Nk*self.a, ' [a.u.] =', (self.Nk*self.a)*aB, ' [nm]')
+        print('# ')
 
     def get_Nocc(self):
         self.Nocc = int(self.Nave/2.0)

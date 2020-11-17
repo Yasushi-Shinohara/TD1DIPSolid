@@ -1,11 +1,14 @@
 #!/usr/bin/python
 # coding: UTF-8
 # This is created 2020/04/20 by Y. Shinohara
-# This is lastly modified 2020/04/20 by Y. Shinohara
+# This is lastly modified 2020/11/18 by Y. Shinohara
 import time
 import sys
 
-def print_header():
+def print_header(code_name):
+    print('# ===========================')
+    print('# This is the std of the code: '+code_name)
+    print('# ===========================')
     print(time.strftime("# Started at %a, %d %b %Y %H:%M:%S %z %Z",time.localtime()))
     print('# ===========================')
     print('# Python version: ',sys.version.replace('\n',' '))
