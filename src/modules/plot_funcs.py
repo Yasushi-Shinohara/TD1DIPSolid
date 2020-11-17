@@ -4,7 +4,28 @@
 # This is lastly modified 2020/04/20 by Y. Shinohara
 from modules.constants import *
 
-def plot_E(plt,cm, t,E):
+def plot_band(plt,cm, param, epsbk, Nbandmax = 4):
+    plt.figure()
+    plt.xlim(np.amin(param.k), np.amax(param.k))
+    plt.xlabel('$k$ [a.u.]')
+    plt.ylabel('$\epsilon_{bk}$ [eV]')
+    for ib in range(Nbandmax):
+        plt.plot(param.k,epsbk[ib,:]*Hartree)
+    plt.grid()
+    plt.show()
+#
+def plot_AE(plt,cm, param, t, A, E):
+    plt.figure()
+    plt.title('Vector potential')
+    plt.xlabel('Time [fs]')
+    plt.ylabel('Field strength [V/nm]')
+    plt.xlim(0.0,np.amax(t)*Atomtime)
+    plt.plot(t*Atomtime,A)
+    plt.plot(t*Atomtime,param.b*np.ones(param.Nt)/2.0)
+    plt.plot(t*Atomtime,-param.b*np.ones(param.Nt)/2.0)
+    plt.grid()
+    plt.show()
+#
     plt.figure()
     plt.title('Electric field')
     plt.xlabel('Time [fs]')
@@ -14,26 +35,12 @@ def plot_E(plt,cm, t,E):
     plt.grid()
     plt.show()
 #
-def plot_RT(plt,cm, t,nv,nc,Ene):
+def plot_RT(plt,cm, t,J,Ene):
     plt.figure()
-    plt.title('Population of the lower and the upper level')
     plt.xlabel('Time [fs]')
-    plt.ylabel('Populations')
+    plt.ylabel('Current density [a.u.]')
     plt.xlim(0.0,np.amax(t)*Atomtime)
-    plt.plot(t*Atomtime,nv,label='nv')
-    plt.plot(t*Atomtime,nc,label='nc')
-    plt.legend()
-    plt.grid()
-    plt.show()
-#
-    plt.figure()
-    plt.title('Population of the lower level with log-scale')
-    plt.yscale('log')
-    plt.xlabel('Time [fs]')
-    plt.ylabel('Populations')
-    plt.xlim(0.0,np.amax(t)*Atomtime)
-    plt.plot(t*Atomtime,nv,label='nv')
-    plt.legend()
+    plt.plot(t*Atomtime,J)
     plt.grid()
     plt.show()
 #

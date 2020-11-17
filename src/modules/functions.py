@@ -23,13 +23,6 @@ def get_vxvGvGGvGGk(param):
     vGGk = np.zeros([param.NG, param.NG, param.NK], dtype='complex128')
     for ik in range(param.NK):
         vGGk[:,:,ik] = 1.0*vGG[:,:]
-    if(not param.cluster_mode):
-        import matplotlib.pyplot as plt
-        plt.figure()
-        plt.plot(param.x,vx,label='The local potential')
-        plt.grid()
-        plt.legend()
-        plt.show()
     return vx, vG, vGG, vGGk
 #
 def get_tGGk(param, A):
@@ -68,11 +61,7 @@ def occbkuGbkhGGk_Ene(param,occbk,uGbk, hGGk): #Exact formula should be checked=
             Ene = Ene + occbk[ib,ik]*np.real(np.vdot(uGbk[:,ib,ik],hubG[:,ib]))
     return Ene*param.a/float(param.NG**2) #orbital function is normalized to give correct number of particle in the cell.
 #
-def h_U(param,h):
-    w, v = np.linalg.eigh(h)
-    U = np.exp(-zI*w[0]*param.dt)*np.outer(v[0,:],np.conj(v[0,:])) + np.exp(-zI*w[1]*param.dt)*np.outer(v[1,:],np.conj(v[1,:]))
-    return U
-#
+
 def Make_Efield(param):
     t = np.zeros([param.Nt],dtype=np.float64)
     E = np.zeros([param.Nt],dtype=np.float64)

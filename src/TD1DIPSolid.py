@@ -19,7 +19,7 @@ param.read_parameters()    #Initialization of the parameters and the replacement
 param.grid_constructions() #
 param.get_Nocc()           #
 from modules.functions import * #Caution!! This should be modified 
-from modules.plot_funcs import plot_E, plot_RT
+from modules.plot_funcs import plot_band, plot_AE, plot_RT
 
 if (not param.cluster_mode):
     #Matplotlib is activated for the cluster_mode == True
@@ -34,6 +34,13 @@ occbk = np.zeros([param.NG, param.NK],dtype='float64') #Occupation number
 occbk[0:param.Nocc,:] = 2.0/float(param.NK)
 
 vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
+if(not param.cluster_mode):
+    plt.figure()
+    plt.ylabel('Energy [a.u.]')
+    plt.plot(param.x,vx,label='The local potential')
+    plt.grid()
+    plt.legend()
+    plt.show()
 tGGk = get_tGGk(param,0.0)
 hGGk = tGGk + vGGk
 
@@ -45,20 +52,11 @@ Eg = np.amin(epsbk[param.Nocc,:])-np.amax(epsbk[param.Nocc - 1,:])
 print('Eg = '+str(Eg)+' a.u. = '+str(Hartree*Eg)+' eV')
 
 if (not param.cluster_mode):
-    plt.figure()
-    plt.xlim(np.amin(param.k), np.amax(param.k))
-    plt.xlabel('$k$ [a.u.]')
-    plt.ylabel('$\epsilon_{bk}$ [eV]')
-    for ib in range(4):
-        plt.plot(param.k,epsbk[ib,:]*Hartree)
-    plt.grid()
-    plt.show()
+    plot_band(plt,cm, param, epsbk)
 
 print('Band calculation is done properly.    ')
 print('######################################')
 
-#Ene = psih_Ene(psi,h)
-#Ene = 
 dns = occbkuGbk_dns(param,occbk,uGbk)
 print('## Check for dns, '+str(np.sum(dns)*param.H))
 J = occbkuGbk_J(param,occbk,uGbk,0.0) #Matter current
@@ -89,7 +87,7 @@ if (np.amax(t) < np.amax(param.Tpulse)):
         
 if (not param.cluster_mode):
     #Plot shape of the electric field
-    plot_E(plt,cm, t,E)
+    plot_AE(plt,cm, param,t,A,E)
 
 tt = time.time()
 print_midtime(ts,tt)
@@ -124,15 +122,15 @@ print('# Absorbed energy:',Ene[param.Nt-1]-Ene[0], '[a.u.] =',(Ene[param.Nt-1]-E
 
 if (not param.cluster_mode):
     #Plot data obtained in real-time evolution, nv, nc, Ene
-    plot_RT(plt,cm, t,nv,nc,Ene)
+    plot_RT(plt,cm, t,J,Ene)
 
 te = time.time()
 print_endtime(ts,tt,te,param.Nt)
 
 if (param.minimal_output):
-    np.savez('tEne.npz', t=t, Ene=Ene)
+    np.savez('tJEne.npz', t=t, J=J, Ene=Ene)
 else:
-    np.savez('RTall.npz', t=t, nv=nv, nc=nc, Ene=Ene)
+    np.savez('RTall.npz', t=t, E=E, A=A, J=J, Ene=Ene)
 
 print_footer() 
 sys.exit()
