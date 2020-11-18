@@ -2,7 +2,7 @@
 # This is created 2020/04/17 by Y. Shinohara
 # This is lastly modified 2020/05/20 by Y. Shinohara
 import sys
-from modules.constants import pi,tpi, Atomtime, Hartree, Atomfield, aB
+from modules.constants import pi,tpi, Atomtime, Hartree, Atomfield, aB, halfepsc
 import numpy as np
 
 class parameter_class:
@@ -14,9 +14,10 @@ class parameter_class:
         self.PC_option = True         #Predictor-corrector option
         self.minimal_output = True    #A flag to write-out minimal data or not
         ## System info.
-        self.a = 10.0                 #The lattice constant
+        self.a = 8.0                  #The lattice constant
         self.b = None                 #The reciprocal lattice vector, tpi/a
-        self.v0 = 9.0/Hartree         #The depth of the local potential
+        self.v0 = 0.37                #The depth of the local potential
+        self.temperature = -1.0       #Electron temperature, negative value leading to the zero-temperature
         self.Nave = 4.0               #Number of electron in the cell, doubly degenerated due to the spin
         self.Nocc = None              #Number of occupied levels, int(Nave/2)
         ## Numerical discretization
@@ -31,11 +32,11 @@ class parameter_class:
         self.Nt = 4000                #The number of time steps
         ## Field parameters
         self.Ncolor = 1               #Number of color for the field
-        self.omegac = 1.55/Hartree    #Photon energy
-        self.phi_CEP = 0.0/tpi        #Carrier envelope phase
-        self.Tpulse = 40.0/Atomtime   #A parameter for pulse duration
-        self.nenvelope = 4            #Power for the sing envelope function
-        self.E0 = 1.0e0/Atomfield     #Field strength in a.u.
+        self.omegac = 0.3875/Hartree  #Photon energy  [a.u.]
+        self.phi_CEP = 0.25           #Carrier envelope phase [2 pi]
+        self.Tpulse = 40.0/Atomtime   #A parameter for pulse duration [a.u.]
+        self.nenvelope = 4            #Power for the sing envelope function 
+        self.E0 = 0.9*1.843/Atomfield #Field strength [a.u.]
 
     def read_parameters(self):
         argv = sys.argv
@@ -72,14 +73,18 @@ class parameter_class:
                     self.a = float(str(text[i+1]))
                 if (str(text[i]) == 'v0'):
                     self.v0 = float(str(text[i+1]))
-                    
+                if (str(text[i]) == 'temperature'):
+                    self.temperature = float(str(text[i+1]))
                 if (str(text[i]) == 'Nave'):
                     self.Nave = int(str(text[i+1]))
+                    
                 if (str(text[i]) == 'NG'):
                     self.NG = int(str(text[i+1]))
                 if (str(text[i]) == 'Nk'):
                     self.Nk = int(str(text[i+1]))
 
+                if (str(text[i]) == 'RT_option'):
+                    self.RT_option = text[i+1].split()[0]
                 if (str(text[i]) == 'dt'):
                     self.dt = float(str(text[i+1]))
                 if (str(text[i]) == 'Nt'):
@@ -170,6 +175,7 @@ class parameter_class:
             print('# E0 =', self.E0, ' [a.u.] =', self.E0*Atomfield, ' [V/nm]') 
             print('# e*a*E0 =', self.a*self.E0, ' [a.u.] =', self.a*self.E0*Hartree, ' [eV]')
             print('# E0/omegac =', self.E0/self.omegac, ' [a.u.] =', self.E0/self.omegac/aB, ' [/nm]') 
+            print('# Peak intensity of the envelope: Imax =', (self.E0)**2, ' [a.u.] =', (self.E0)**2*halfepsc/1.0e9, ' [GW/cm^2]') 
         else:
             for icolor in range(self.Ncolor):
                 print('# =====', icolor,'th color ========')

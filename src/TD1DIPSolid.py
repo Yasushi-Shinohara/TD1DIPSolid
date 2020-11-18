@@ -26,11 +26,14 @@ param.get_Nocc()           #
 #
 RTc = RT_propagation_class()
 if (param.RT_option == 'exp'):
-    uGbkhkGG2uGbk = RTc.uGbkhGGk2uGbk_exp
+    uGbk_forward = RTc.uGbk_forward_exp
     print('# The exponential expression for the temporal propagator is chosen.')
 elif (param.RT_option == 'RK4'):
-    uGbkhkGG2uGbk = RTc.uGbkhGGk2uGbk_RK4
+    uGbk_forward = RTc.uGbk_forward_RK4
     print('# The Runge-Kutta 4th for the temporal propagator is chosen.')
+elif ((param.RT_option == 'RK4FFT') or (param.RT_option == 'RK4_FFT')):
+    uGbk_forward = RTc.uGbk_forward_RK4FFT
+    print('# The Runge-Kutta 4th with for the temporal propagator is chosen.')
 else :
     print('# ERROR: undefined RT_option is called.')
     sys.exit()
@@ -43,7 +46,6 @@ if (not param.cluster_mode): #Matplotlib is activated for the cluster_mode == Tr
 uGbk = np.zeros([param.NG, param.NG, param.Nk],dtype='complex128') #Wave function in reciprocal space
 epsbk = np.zeros([param.NG, param.Nk],dtype='float64') #Eigenvalue of the Hamiltonian
 occbk = np.zeros([param.NG, param.Nk],dtype='float64') #Occupation number
-occbk[0:param.Nocc,:] = 2.0/float(param.Nk)
 
 vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
 if(not param.cluster_mode):
@@ -57,12 +59,21 @@ for ik in range(param.Nk):
 uGbk = uGbk/np.sqrt(param.a)*float(param.NG) #Normalization
 Eg = np.amin(epsbk[param.Nocc,:])-np.amax(epsbk[param.Nocc - 1,:])
 print('# Eg = '+str(Eg)+' a.u. = '+str(Hartree*Eg)+' eV')
-
 if (not param.cluster_mode):
     plot_band(plt,cm, param, epsbk)
 
 print('# Band calculation is done properly.    ')
 print('######################################')
+
+if (param.temperature < 0.0):
+    occbk[0:param.Nocc,:] = 2.0/float(param.Nk)
+    uGbk = uGbk[:,0:param.Nocc,:]
+    occbk = occbk[0:param.Nocc,:]
+    print('# The system is assumed to be zero-temperature insulator. ')
+else :
+    print('# ERROR: Currenty, finite-temperature occupation distribution is not supported.')
+    sys.exit()
+
 
 dns = occbkuGbk_dns(param,occbk,uGbk)
 print('## Check for dns at initial, '+str(np.sum(dns)*param.H))
@@ -104,7 +115,8 @@ for it in range(param.Nt):
     else:
         tGGk = get_tGGk(param,A[it])
     hGGk = tGGk + vGGk
-    uGbk = uGbkhkGG2uGbk(param, uGbk, hGGk)
+    #uGbk = uGbkhkGG2uGbk(param, uGbk, hGGk)
+    uGbk = uGbk_forward(param, uGbk, hGGk, tGGk, vx)
     if (it%1000 == 0):
         dns = occbkuGbk_dns(param,occbk,uGbk)
         print(it,np.sum(dns)*param.H, J[it], Ene[it])
