@@ -13,6 +13,7 @@ class parameter_class:
         self.cluster_mode = False
         self.PC_option = True         #Predictor-corrector option
         self.minimal_output = True    #A flag to write-out minimal data or not
+        self.Fortlib_option = False   #A flag to use Fortran acceleration by using "Fortlib"
         ## System info.
         self.a = 8.0                  #The lattice constant
         self.b = None                 #The reciprocal lattice vector, tpi/a
@@ -71,6 +72,11 @@ class parameter_class:
                         self.minimal_output = True
                     else:
                         self.minimal_output = False
+                if (str(text[i]) == 'Fortlib_option'):
+                    if (str(text[i+1]) == 'True'):
+                        self.Fortlib_option = True
+                    else:
+                        self.Fortlib_option = False
                 if (str(text[i]) == 'a'):
                     self.a = float(str(text[i+1]))
                 if (str(text[i]) == 'v0'):
@@ -151,6 +157,7 @@ class parameter_class:
         print('# cluster_mode =', self.cluster_mode)
         print('# PC_option =', self.PC_option)
         print('# minimal_output =', self.minimal_output)
+        print('# Fortlib_option =', self.Fortlib_option)
         print('# ')
         print('# a =', self.a, ' [a.u.] =',self.a*aB, ' [nm]')
         print('# v0 =', self.v0, ' [a.u.] =', self.v0*Hartree, ' [eV]') 

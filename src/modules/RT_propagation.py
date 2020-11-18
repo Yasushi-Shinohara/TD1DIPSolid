@@ -2,19 +2,24 @@
 # This is created 2020/11/17 by Y. Shinohara
 # This is lastly modified 2020/11/17 by Y. Shinohara
 import sys
+import os
 from modules.constants import tpi, zI
 import numpy as np
+import ctypes as ct
 
 class RT_propagation_class():
     def __init__(self):
         self.something = None
+        self.FL = None
 
-    def uGbk_forward(self, propagator_option):
+    def uGbk_forward(self, propagator_option, Fortlib_option):
         if (propagator_option.lower() == 'exp'):
             uGbk_forward = self.uGbk_forward_exp
             print('# The exponential expression for the temporal propagator is chosen.')
         elif (propagator_option.upper() == 'RK4'):
             uGbk_forward = self.uGbk_forward_RK4
+            if (Fortlib_option):
+                uGbk_forward = self.uGbk_forward_RK4_Fortran
             print('# The Runge-Kutta 4th for the temporal propagator is chosen.')
         elif ((propagator_option.upper() == 'RK4FFT') or (propagator_option.uppwer() == 'RK4_FFT')):
             uGbk_forward = self.uGbk_forward_RK4FFT
@@ -68,4 +73,26 @@ class RT_propagation_class():
             k3 = self.u_t_v2hu_FFT(uGbk[:,:,ik] + 0.5*param.dt*k2, tGGdiagk[:,ik], vx)/zI
             k4 = self.u_t_v2hu_FFT(uGbk[:,:,ik] + param.dt*k3, tGGdiagk[:,ik], vx)/zI
             uGbk[:,:,ik] = uGbk[:,:,ik] + (k1 + 2.0*k2 + 2.0*k3 + k4)*param.dt/6.0 
+        return uGbk
+
+
+    def Prep4Fortlib(self, param):
+        self.ref_NG = ct.byref(ct.c_int64(param.NG))
+        self.ref_Nocc = ct.byref(ct.c_int64(param.Nocc))
+        self.ref_Nk = ct.byref(ct.c_int64(param.Nk))
+        self.ref_dt = ct.byref(ct.c_double(param.dt))
+        dir_name = os.path.dirname(os.path.abspath(__file__)).strip('modules')
+        print('# Fortlib.so: ',dir_name+"Fortlib.so")
+        self.FL = np.ctypeslib.load_library(dir_name+"Fortlib.so",".")
+        self.FL.ugbk_forward_rk4_.argtypes = [
+            np.ctypeslib.ndpointer(dtype=np.complex128), #ubk
+            np.ctypeslib.ndpointer(dtype=np.complex128), #hGGk
+            ct.POINTER(ct.c_int64),                      #NG
+            ct.POINTER(ct.c_int64),                      #Nocc
+            ct.POINTER(ct.c_int64),                      #Nk
+            ct.POINTER(ct.c_double),]                    #dt
+        self.FL.ugbk_forward_rk4_.restype = ct.c_void_p
+
+    def uGbk_forward_RK4_Fortran(self, param, uGbk, hGGk, tGGk, vx):
+        self.FL.ugbk_forward_rk4_(uGbk, hGGk, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt)
         return uGbk

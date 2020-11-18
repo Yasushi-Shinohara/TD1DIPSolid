@@ -25,7 +25,8 @@ param.grid_constructions() #
 param.get_Nocc()           #
 #
 RTc = RT_propagation_class()
-uGbk_forward = RTc.uGbk_forward(param.propagator_option)
+uGbk_forward = RTc.uGbk_forward(param.propagator_option, param.Fortlib_option)
+RTc.Prep4Fortlib(param)
 
 if (not param.cluster_mode): #Matplotlib is activated for the cluster_mode == True
     import matplotlib.pyplot as plt
@@ -105,7 +106,8 @@ for it in range(param.Nt):
         tGGk = get_tGGk(param,A[it])
     hGGk = tGGk + vGGk
     uGbk = uGbk_forward(param, uGbk, hGGk, tGGk, vx)
-    if (it%1000 == 0):
+    #if (it%1000 == 0):
+    if (it%1 == 0): #DEBUG
         dns = occ_u2dns(param,occbk,uGbk)
         print(it,np.sum(dns)*param.H, J[it], Ene[it])
 
