@@ -79,7 +79,7 @@ def Make_Efield(param):
             for it in range(param.Nt):
                 if (t[it] < param.Tpulse[icolor]):
                     A[it,icolor] = (param.E0[icolor]/param.omegac[icolor])*(np.sin(pi*t[it]/param.Tpulse[icolor]))**param.nenvelope[icolor]*np.cos(param.omegac[icolor]*(t[it] - 0.5*param.Tpulse[icolor]) + param.phi_CEP[icolor])
-        A = np.sum(E,axis=1)
+        A = np.sum(A,axis=1)
     else :
         print('ERROR: The parameter '+str(param.Ncolor)+' is improper.')
         sys.exit()
