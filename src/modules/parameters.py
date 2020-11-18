@@ -76,7 +76,7 @@ class parameter_class:
                 if (str(text[i]) == 'temperature'):
                     self.temperature = float(str(text[i+1]))
                 if (str(text[i]) == 'Nave'):
-                    self.Nave = int(str(text[i+1]))
+                    self.Nave = float(str(text[i+1]))
                     
                 if (str(text[i]) == 'NG'):
                     self.NG = int(str(text[i+1]))
@@ -206,3 +206,9 @@ class parameter_class:
 
     def get_Nocc(self):
         self.Nocc = int(self.Nave/2.0)
+        if (abs(self.Nave - 2.0*self.Nocc) > 1.0e-8):
+            print('# The average number of particle in a cell: ', self.Nave)
+            print('# ERROR: Currenty, metallic occupation is not supported.')
+            print('# The average number should be even.')
+            sys.exit()
+            
