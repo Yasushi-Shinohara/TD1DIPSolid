@@ -17,6 +17,7 @@ class parameter_class:
         self.a = 8.0                  #The lattice constant
         self.b = None                 #The reciprocal lattice vector, tpi/a
         self.v0 = 0.37                #The depth of the local potential
+        self.temperature = -1.0       #Electron temperature, negative value leading to the zero-temperature
         self.Nave = 4.0               #Number of electron in the cell, doubly degenerated due to the spin
         self.Nocc = None              #Number of occupied levels, int(Nave/2)
         ## Numerical discretization
@@ -72,9 +73,11 @@ class parameter_class:
                     self.a = float(str(text[i+1]))
                 if (str(text[i]) == 'v0'):
                     self.v0 = float(str(text[i+1]))
-                    
+                if (str(text[i]) == 'temperature'):
+                    self.temperature = float(str(text[i+1]))
                 if (str(text[i]) == 'Nave'):
                     self.Nave = int(str(text[i+1]))
+                    
                 if (str(text[i]) == 'NG'):
                     self.NG = int(str(text[i+1]))
                 if (str(text[i]) == 'Nk'):

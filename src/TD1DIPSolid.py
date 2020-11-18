@@ -43,7 +43,6 @@ if (not param.cluster_mode): #Matplotlib is activated for the cluster_mode == Tr
 uGbk = np.zeros([param.NG, param.NG, param.Nk],dtype='complex128') #Wave function in reciprocal space
 epsbk = np.zeros([param.NG, param.Nk],dtype='float64') #Eigenvalue of the Hamiltonian
 occbk = np.zeros([param.NG, param.Nk],dtype='float64') #Occupation number
-occbk[0:param.Nocc,:] = 2.0/float(param.Nk)
 
 vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
 if(not param.cluster_mode):
@@ -57,12 +56,21 @@ for ik in range(param.Nk):
 uGbk = uGbk/np.sqrt(param.a)*float(param.NG) #Normalization
 Eg = np.amin(epsbk[param.Nocc,:])-np.amax(epsbk[param.Nocc - 1,:])
 print('# Eg = '+str(Eg)+' a.u. = '+str(Hartree*Eg)+' eV')
-
 if (not param.cluster_mode):
     plot_band(plt,cm, param, epsbk)
 
 print('# Band calculation is done properly.    ')
 print('######################################')
+
+if (param.temperature < 0.0):
+    occbk[0:param.Nocc,:] = 2.0/float(param.Nk)
+    uGbk = uGbk[:,0:param.Nocc,:]
+    occbk = occbk[0:param.Nocc,:]
+    print('# The system is assumed to be zero-temperature insulator. ')
+else :
+    print('# ERROR: Currenty, finite-temperature occupation distribution is not supported.')
+    sys.exit()
+
 
 dns = occbkuGbk_dns(param,occbk,uGbk)
 print('## Check for dns at initial, '+str(np.sum(dns)*param.H))

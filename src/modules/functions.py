@@ -44,19 +44,21 @@ def occbkuGbk_dns(param,occbk,uGbk):
     return dns
 
 def occbkuGbk_J(param,occbk,uGbk,A): #Exact formula should be checked=========
+    NBact = np.shape(uGbk)[1]
     J = 0.0
     for ik in range(param.Nk):
         kpA = param.k[ik] + A
-        for ib in range(param.NG):
+        for ib in range(NBact):
             J = J + occbk[ib,ik]*(np.sum(param.G[:]*(np.abs(uGbk[:,ib,ik]))**2)*param.a/float(param.NG**2) + kpA)
     return J/param.a
 
 def occbkuGbkhGGk_Ene(param,occbk,uGbk, hGGk): #Exact formula should be checked=========
+    NBact = np.shape(uGbk)[1]
     Ene = 0.0
     hk = 1.0*hGGk
     for ik in range(param.Nk):
         hubG = np.dot(hk[:,:,ik], uGbk[:,:,ik])
-        for ib in range(param.NG):
+        for ib in range(NBact):
             Ene = Ene + occbk[ib,ik]*np.real(np.vdot(uGbk[:,ib,ik],hubG[:,ib]))
     return Ene*param.a/float(param.NG**2) #orbital function is normalized to give correct number of particle in the cell.
 #
