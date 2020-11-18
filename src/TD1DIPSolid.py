@@ -64,11 +64,11 @@ else :
     sys.exit()
 
 
-dns = occbkuGbk_dns(param,occbk,uGbk)
+dns = occ_u2dns(param,occbk,uGbk)
 print('## Check for dns at initial, '+str(np.sum(dns)*param.H))
-J = occbkuGbk_J(param,occbk,uGbk,0.0) #Matter current, namely negative sign need for the charge current
+J = occ_u_A2J(param,occbk,uGbk,0.0) #Matter current, namely negative sign need for the charge current
 print('## Check for current at initial, '+str(J))
-Ene = occbkuGbkhGGk_Ene(param,occbk,uGbk,hGGk)
+Ene = occ_u_h2Ene(param,occbk,uGbk,hGGk)
 print('## Check for Ene, '+str(Ene))
 print('# System energy at initial:',Ene, '[a.u.] =',Ene*Hartree, ' [eV]')
 
@@ -97,8 +97,8 @@ print_midtime(ts,tt)
 #############################RT calculation##############################
 #Time-propagation
 for it in range(param.Nt):
-    J[it] = occbkuGbk_J(param,occbk,uGbk,A[it])
-    Ene[it] = occbkuGbkhGGk_Ene(param,occbk,uGbk,hGGk)
+    J[it] = occ_u_A2J(param,occbk,uGbk,A[it])
+    Ene[it] = occ_u_h2Ene(param,occbk,uGbk,hGGk)
     if (param.PC_option):
         tGGk = get_tGGk(param,Aave[it])
     else:
@@ -106,7 +106,7 @@ for it in range(param.Nt):
     hGGk = tGGk + vGGk
     uGbk = uGbk_forward(param, uGbk, hGGk, tGGk, vx)
     if (it%1000 == 0):
-        dns = occbkuGbk_dns(param,occbk,uGbk)
+        dns = occ_u2dns(param,occbk,uGbk)
         print(it,np.sum(dns)*param.H, J[it], Ene[it])
 
 print('# System energy at end:',Ene[param.Nt-1], '[a.u.] =',Ene[param.Nt-1]*Hartree, ' [eV]')

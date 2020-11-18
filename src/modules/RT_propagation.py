@@ -37,19 +37,19 @@ class RT_propagation_class():
             uGbk[:,:,ik] = np.dot(U, uGbk[:,:,ik])
         return uGbk
 
-    def uh2hu(self, uGb, hGG):
+    def u_h2hu(self, uGb, hGG):
         return np.dot(hGG,uGb)
 
     def uGbk_forward_RK4(self, param, uGbk, hGGk, tGGk, vx):
         for ik in range(param.Nk):
-            k1 = self.uh2hu(uGbk[:,:,ik], hGGk[:,:,ik])/zI
-            k2 = self.uh2hu(uGbk[:,:,ik] + 0.5*param.dt*k1, hGGk[:,:,ik])/zI
-            k3 = self.uh2hu(uGbk[:,:,ik] + 0.5*param.dt*k2, hGGk[:,:,ik])/zI
-            k4 = self.uh2hu(uGbk[:,:,ik] + param.dt*k3, hGGk[:,:,ik])/zI
+            k1 = self.u_h2hu(uGbk[:,:,ik], hGGk[:,:,ik])/zI
+            k2 = self.u_h2hu(uGbk[:,:,ik] + 0.5*param.dt*k1, hGGk[:,:,ik])/zI
+            k3 = self.u_h2hu(uGbk[:,:,ik] + 0.5*param.dt*k2, hGGk[:,:,ik])/zI
+            k4 = self.u_h2hu(uGbk[:,:,ik] + param.dt*k3, hGGk[:,:,ik])/zI
             uGbk[:,:,ik] = uGbk[:,:,ik] + (k1 + 2.0*k2 + 2.0*k3 + k4)*param.dt/6.0 
         return uGbk
 
-    def utv2hu_FFT(self, uGb, tGGdiag, vx):
+    def u_t_v2hu_FFT(self, uGb, tGGdiag, vx):
         NBact = np.shape(uGb)[1]
         vuxb = np.empty_like(uGb)
         tuGb = np.empty_like(uGb)
@@ -63,9 +63,9 @@ class RT_propagation_class():
     def uGbk_forward_RK4FFT(self, param, uGbk, hGGk, tGGk, vx):
         tGGdiagk = np.diagonal(tGGk, axis1 = 0, axis2 = 1).T
         for ik in range(param.Nk):
-            k1 = self.utv2hu_FFT(uGbk[:,:,ik], tGGdiagk[:,ik], vx)/zI
-            k2 = self.utv2hu_FFT(uGbk[:,:,ik] + 0.5*param.dt*k1, tGGdiagk[:,ik], vx)/zI
-            k3 = self.utv2hu_FFT(uGbk[:,:,ik] + 0.5*param.dt*k2, tGGdiagk[:,ik], vx)/zI
-            k4 = self.utv2hu_FFT(uGbk[:,:,ik] + param.dt*k3, tGGdiagk[:,ik], vx)/zI
+            k1 = self.u_t_v2hu_FFT(uGbk[:,:,ik], tGGdiagk[:,ik], vx)/zI
+            k2 = self.u_t_v2hu_FFT(uGbk[:,:,ik] + 0.5*param.dt*k1, tGGdiagk[:,ik], vx)/zI
+            k3 = self.u_t_v2hu_FFT(uGbk[:,:,ik] + 0.5*param.dt*k2, tGGdiagk[:,ik], vx)/zI
+            k4 = self.u_t_v2hu_FFT(uGbk[:,:,ik] + param.dt*k3, tGGdiagk[:,ik], vx)/zI
             uGbk[:,:,ik] = uGbk[:,:,ik] + (k1 + 2.0*k2 + 2.0*k3 + k4)*param.dt/6.0 
         return uGbk

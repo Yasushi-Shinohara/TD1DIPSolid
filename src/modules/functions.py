@@ -33,7 +33,7 @@ def get_tGGk(param, A):
     return tGGk
 
 #Relevant functions
-def occbkuGbk_dns(param,occbk,uGbk):
+def occ_u2dns(param,occbk,uGbk):
     dns = np.zeros(param.NG,dtype='float64')
     work = np.empty_like(uGbk[:,0,0])
     NBact = np.shape(uGbk)[1]
@@ -43,7 +43,7 @@ def occbkuGbk_dns(param,occbk,uGbk):
             dns = dns + occbk[ib,ik]*(np.abs(work))**2
     return dns
 
-def occbkuGbk_J(param,occbk,uGbk,A): #Exact formula should be checked=========
+def occ_u_A2J(param,occbk,uGbk,A): #Exact formula should be checked=========
     NBact = np.shape(uGbk)[1]
     J = 0.0
     for ik in range(param.Nk):
@@ -52,7 +52,7 @@ def occbkuGbk_J(param,occbk,uGbk,A): #Exact formula should be checked=========
             J = J + occbk[ib,ik]*(np.sum(param.G[:]*(np.abs(uGbk[:,ib,ik]))**2)*param.a/float(param.NG**2) + kpA)
     return J/param.a
 
-def occbkuGbkhGGk_Ene(param,occbk,uGbk, hGGk): #Exact formula should be checked=========
+def occ_u_h2Ene(param,occbk,uGbk, hGGk): #Exact formula should be checked=========
     NBact = np.shape(uGbk)[1]
     Ene = 0.0
     hk = 1.0*hGGk
