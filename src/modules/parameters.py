@@ -27,7 +27,7 @@ class parameter_class:
         self.Nk = 20                  #Number of Brillouin zone sampling
         self.k = None                 #k-grid
         ## Time propagation
-        self.RT_option = 'exp'        #The size of the time-step
+        self.propagator_option = 'exp'        #The size of the time-step
         self.dt = 5.0e-1              #The size of the time-step
         self.Nt = 4000                #The number of time steps
         ## Field parameters
@@ -83,8 +83,8 @@ class parameter_class:
                 if (str(text[i]) == 'Nk'):
                     self.Nk = int(str(text[i+1]))
 
-                if (str(text[i]) == 'RT_option'):
-                    self.RT_option = text[i+1].split()[0]
+                if (str(text[i]) == 'propagator_option'):
+                    self.propagator_option = text[i+1].split()[0]
                 if (str(text[i]) == 'dt'):
                     self.dt = float(str(text[i+1]))
                 if (str(text[i]) == 'Nt'):
@@ -156,7 +156,7 @@ class parameter_class:
         print('# NG =', self.NG) 
         print('# Nk =', self.Nk) 
         print('# ')
-        print('# RT_option =', self.RT_option) 
+        print('# propagator_option =', self.propagator_option) 
         print('# dt =', self.dt, ' [a.u.] =', self.dt*Atomtime, ' [fs]') 
         print('# 2pi/dt =', tpi/self.dt, ' [a.u.] =', tpi/self.dt*Hartree, ' [eV]') 
         print('# Nt =', self.Nt) 

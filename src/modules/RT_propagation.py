@@ -9,6 +9,21 @@ class RT_propagation_class():
     def __init__(self):
         self.something = None
 
+    def uGbk_forward(self, propagator_option):
+        if (propagator_option.lower() == 'exp'):
+            uGbk_forward = self.uGbk_forward_exp
+            print('# The exponential expression for the temporal propagator is chosen.')
+        elif (propagator_option.upper() == 'RK4'):
+            uGbk_forward = self.uGbk_forward_RK4
+            print('# The Runge-Kutta 4th for the temporal propagator is chosen.')
+        elif ((propagator_option.upper() == 'RK4FFT') or (propagator_option.uppwer() == 'RK4_FFT')):
+            uGbk_forward = self.uGbk_forward_RK4FFT
+            print('# The Runge-Kutta 4th with FFT for the temporal propagator is chosen.')
+        else :
+            print('# ERROR: undefined propagator_option is called.')
+            sys.exit()
+        return uGbk_forward
+
     def hdt2U(self, hdt):
         eigs, coef = np.linalg.eigh(hdt)
         U = np.exp(-zI*eigs[0])*np.outer(coef[:,0],np.conj(coef[:,0]))
