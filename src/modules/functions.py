@@ -11,8 +11,7 @@ def get_vxvGvGGvGGk(param):
     alpha = 5.0e-2
     beta = 5.0e-2
     gamma = 1.0e-1
-    v0 =  0.37
-    vx = -v0*(1.0+np.cos(tpi*param.x/param.a))
+    vx = -param.v0*(1.0 - np.cos(tpi*param.x/param.a))
     vG = np.fft.fft(vx)/np.float(param.NG)
     vGG = np.zeros([param.NG, param.NG], dtype='complex128') 
     for ig1 in range(param.NG):
@@ -86,7 +85,12 @@ def Make_Efield(param):
     for it in range(1,param.Nt-1):
         E[it] = -(A[it+1] - A[it-1])/2.0/param.dt
     E[0] = 2.0*E[1] - E[2]
-    E[param.Nt-1] = 2.0*E[param.Nt-2] - E[param.Nt-3]    
+    E[param.Nt-1] = 2.0*E[param.Nt-2] - E[param.Nt-3]
+    print('# ') 
+    print('# Actual field max =', np.amax(np.abs(E)), ' [a.u.] =', np.amax(np.abs(E))*Atomfield, ' [V/nm]') 
+    print('# Corresponding intensity: ', np.amax(E**2), ' [a.u.] =', np.amax(E**2)*halfepsc/1.0e9, ' [GW/cm^2]') 
+    print('# Fluence of the pulse: ', np.sum(E**2)*param.dt, ' [a.u.] =', np.sum(E**2)*param.dt*Atomfluence, ' [J/cm^2]') 
+    print('# ') 
     return t, A, E
 
 #

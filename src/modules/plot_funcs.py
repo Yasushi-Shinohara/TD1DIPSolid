@@ -6,6 +6,7 @@ from modules.constants import *
 
 def plot_potential(plt,cm, param, vx):
     plt.figure()
+    plt.xlim(0.0, param.a)
     plt.ylabel('Energy [a.u.]')
     plt.plot(param.x,vx,label='The local potential')
     plt.grid()
@@ -14,7 +15,7 @@ def plot_potential(plt,cm, param, vx):
 #
 def plot_band(plt,cm, param, epsbk, Nbandmax = 4):
     plt.figure()
-    plt.xlim(np.amin(param.k), np.amax(param.k))
+    plt.xlim(-0.5*param.b, 0.5*param.b)
     plt.xlabel('$k$ [a.u.]')
     plt.ylabel('$\epsilon_{bk}$ [eV]')
     for ib in range(Nbandmax):
