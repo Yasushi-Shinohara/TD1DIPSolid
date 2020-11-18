@@ -119,9 +119,9 @@ te = time.time()
 print_endtime(ts,tt,te,param.Nt)
 
 if (param.minimal_output):
-    np.savez('tJEne.npz', t=t, J=J, Ene=Ene)
+    np.savez(param.sys_name+'_tJEne.npz', t=t, J=J, Ene=Ene)
 else:
-    np.savez('RTall.npz', t=t, E=E, A=A, J=J, Ene=Ene)
+    np.savez(param.sys_name+'_RTall.npz', t=t, E=E, A=A, J=J, Ene=Ene)
 
 print('# Whole calculation is done properly.    ')
 print_footer() 

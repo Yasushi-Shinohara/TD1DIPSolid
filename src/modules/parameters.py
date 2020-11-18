@@ -54,6 +54,8 @@ class parameter_class:
             for i in range(Nlen):
                 text[i] = lines[i].strip()
             for i in range(Nlen):
+                if (str(text[i]) == 'sys_name'):
+                    self.sys_name = text[i+1].split()[0]
                 if (str(text[i]) == 'cluster_mode'):
                     if (str(text[i+1]) == 'True'):
                         self.cluster_mode = True
@@ -145,6 +147,7 @@ class parameter_class:
             sys.exit()
         
         print('#=====Print the parmeters')
+        print('# sys_name =', self.sys_name)
         print('# cluster_mode =', self.cluster_mode)
         print('# PC_option =', self.PC_option)
         print('# minimal_output =', self.minimal_output)
