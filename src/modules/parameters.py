@@ -80,6 +80,8 @@ class parameter_class:
                 if (str(text[i]) == 'Nk'):
                     self.Nk = int(str(text[i+1]))
 
+                if (str(text[i]) == 'RT_option'):
+                    self.RT_option = text[i+1].split()[0]
                 if (str(text[i]) == 'dt'):
                     self.dt = float(str(text[i+1]))
                 if (str(text[i]) == 'Nt'):
