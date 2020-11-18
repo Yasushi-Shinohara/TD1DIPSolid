@@ -34,7 +34,7 @@ class RT_propagation_class():
             uGbk[:,:,ik] = uGbk[:,:,ik] + (k1 + 2.0*k2 + 2.0*k3 + k4)*param.dt/6.0 
         return uGbk
 
-    def utv2hu_FFT(self, param, uGb, tGGdiag, vx):
+    def utv2hu_FFT(self, uGb, tGGdiag, vx):
         NBact = np.shape(uGb)[1]
         vuxb = np.empty_like(uGb)
         tuGb = np.empty_like(uGb)
@@ -48,9 +48,9 @@ class RT_propagation_class():
     def uGbk_forward_RK4FFT(self, param, uGbk, hGGk, tGGk, vx):
         tGGdiagk = np.diagonal(tGGk, axis1 = 0, axis2 = 1).T
         for ik in range(param.Nk):
-            k1 = self.utv2hu_FFT(param, uGbk[:,:,ik], tGGdiagk[:,ik], vx)/zI
-            k2 = self.utv2hu_FFT(param, uGbk[:,:,ik] + 0.5*param.dt*k1, tGGdiagk[:,ik], vx)/zI
-            k3 = self.utv2hu_FFT(param, uGbk[:,:,ik] + 0.5*param.dt*k2, tGGdiagk[:,ik], vx)/zI
-            k4 = self.utv2hu_FFT(param, uGbk[:,:,ik] + param.dt*k3, tGGdiagk[:,ik], vx)/zI
+            k1 = self.utv2hu_FFT(uGbk[:,:,ik], tGGdiagk[:,ik], vx)/zI
+            k2 = self.utv2hu_FFT(uGbk[:,:,ik] + 0.5*param.dt*k1, tGGdiagk[:,ik], vx)/zI
+            k3 = self.utv2hu_FFT(uGbk[:,:,ik] + 0.5*param.dt*k2, tGGdiagk[:,ik], vx)/zI
+            k4 = self.utv2hu_FFT(uGbk[:,:,ik] + param.dt*k3, tGGdiagk[:,ik], vx)/zI
             uGbk[:,:,ik] = uGbk[:,:,ik] + (k1 + 2.0*k2 + 2.0*k3 + k4)*param.dt/6.0 
         return uGbk
