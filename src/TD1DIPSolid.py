@@ -26,11 +26,14 @@ param.get_Nocc()           #
 #
 RTc = RT_propagation_class()
 if (param.RT_option == 'exp'):
-    uGbkhkGG2uGbk = RTc.uGbkhGGk2uGbk_exp
+    uGbk_forward = RTc.uGbk_forward_exp
     print('# The exponential expression for the temporal propagator is chosen.')
 elif (param.RT_option == 'RK4'):
-    uGbkhkGG2uGbk = RTc.uGbkhGGk2uGbk_RK4
+    uGbk_forward = RTc.uGbk_forward_RK4
     print('# The Runge-Kutta 4th for the temporal propagator is chosen.')
+elif ((param.RT_option == 'RK4FFT') or (param.RT_option == 'RK4_FFT')):
+    uGbk_forward = RTc.uGbk_forward_RK4FFT
+    print('# The Runge-Kutta 4th with for the temporal propagator is chosen.')
 else :
     print('# ERROR: undefined RT_option is called.')
     sys.exit()
@@ -112,7 +115,8 @@ for it in range(param.Nt):
     else:
         tGGk = get_tGGk(param,A[it])
     hGGk = tGGk + vGGk
-    uGbk = uGbkhkGG2uGbk(param, uGbk, hGGk)
+    #uGbk = uGbkhkGG2uGbk(param, uGbk, hGGk)
+    uGbk = uGbk_forward(param, uGbk, hGGk, tGGk, vx)
     if (it%1000 == 0):
         dns = occbkuGbk_dns(param,occbk,uGbk)
         print(it,np.sum(dns)*param.H, J[it], Ene[it])
