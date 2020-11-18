@@ -4,7 +4,7 @@
 # This is lastly modified 2020/06/25 by Y. Shinohara #This part is highly doubtable because of my lazyness
 import time
 ts = time.time()
-ver = '0.1.0'
+ver = '0.2.0'
 code_name = 'TD1DIPSolid-'+ver
 from modules.print_funcs import print_header, print_footer, print_midtime, print_endtime
 print_header(code_name)
