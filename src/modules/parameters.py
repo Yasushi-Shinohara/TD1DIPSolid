@@ -18,6 +18,7 @@ class parameter_class:
         self.a = 8.0                  #The lattice constant
         self.b = None                 #The reciprocal lattice vector, tpi/a
         self.v0 = 0.37                #The depth of the local potential
+        self.flat_length = -1.0       #The length that potential is flat with zero-value
         self.temperature = -1.0       #Electron temperature, negative value leading to the zero-temperature
         self.Nave = 4.0               #Number of electron in the cell, doubly degenerated due to the spin
         self.Nocc = None              #Number of occupied levels, int(Nave/2)
@@ -79,6 +80,8 @@ class parameter_class:
                         self.Fortlib_option = False
                 if (str(text[i]) == 'a'):
                     self.a = float(str(text[i+1]))
+                if (str(text[i]) == 'flat_length'):
+                    self.flat_length = float(str(text[i+1]))
                 if (str(text[i]) == 'v0'):
                     self.v0 = float(str(text[i+1]))
                 if (str(text[i]) == 'temperature'):
@@ -160,6 +163,7 @@ class parameter_class:
         print('# Fortlib_option =', self.Fortlib_option)
         print('# ')
         print('# a =', self.a, ' [a.u.] =',self.a*aB, ' [nm]')
+        print('# flat_length =', self.flat_length, ' [a.u.] =',self.flat_length*aB, ' [nm]: IGNORED if negative value')
         print('# v0 =', self.v0, ' [a.u.] =', self.v0*Hartree, ' [eV]') 
         print('# Nave =', self.Nave) 
         print('# ')

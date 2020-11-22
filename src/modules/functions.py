@@ -3,6 +3,7 @@
 # This is created 2020/04/17 by Y. Shinohara
 # This is lastly modified 2020/05/20 by Y. Shinohara
 import os
+import sys
 import math
 import numpy as np
 from modules.constants import *
@@ -12,6 +13,16 @@ def get_vxvGvGGvGGk(param):
     beta = 5.0e-2
     gamma = 1.0e-1
     vx = -param.v0*(1.0 - np.cos(tpi*param.x/param.a))
+    if (param.flat_length > 0.0):
+        if (param.flat_length > param.a):
+            print('The parameter, flat_length = '+str(param.flat_length)+' [a.u.].')
+            print('ERROR: flat_length should be longer than the lattice constant, a.')
+            sys.exit()
+        for ig in range(param.NG):
+            if (param.x[ig] < (param.a - param.flat_length)):
+                vx[ig] = -param.v0*(1.0 - np.cos(tpi*param.x[ig]/(param.a - param.flat_length)))
+            else:
+                vx[ig] = 0.0
     vG = np.fft.fft(vx)/np.float(param.NG)
     vGG = np.zeros([param.NG, param.NG], dtype='complex128') 
     for ig1 in range(param.NG):
