@@ -19,6 +19,8 @@ class RT_propagation_class():
     def uGbk_forward(self, propagator_option, Fortlib_option):
         if (propagator_option.lower() == 'exp'):
             uGbk_forward = self.uGbk_forward_exp
+            if (Fortlib_option):
+                uGbk_forward = self.uGbk_forward_exp_Fortran
             print('# The exponential expression for the temporal propagator is chosen.')
         elif (propagator_option.upper() == 'RK4'):
             uGbk_forward = self.uGbk_forward_RK4
@@ -98,7 +100,19 @@ class RT_propagation_class():
             ct.POINTER(ct.c_int32),                      #Nk
             ct.POINTER(ct.c_double),]                    #dt
         self.FL.ugbk_forward_rk4_.restype = ct.c_void_p
+        self.FL.ugbk_forward_exp_.argtypes = [
+            np.ctypeslib.ndpointer(dtype='complex128'), #ubk
+            np.ctypeslib.ndpointer(dtype='complex128'), #hGGk
+            ct.POINTER(ct.c_int32),                      #NG
+            ct.POINTER(ct.c_int32),                      #Nocc
+            ct.POINTER(ct.c_int32),                      #Nk
+            ct.POINTER(ct.c_double),]                    #dt
+        self.FL.ugbk_forward_exp_.restype = ct.c_void_p
 
     def uGbk_forward_RK4_Fortran(self, param, uGbk, hGGk, tGGk, vx):
         self.FL.ugbk_forward_rk4_(uGbk, hGGk, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt)
+        return uGbk
+
+    def uGbk_forward_exp_Fortran(self, param, uGbk, hGGk, tGGk, vx):
+        self.FL.ugbk_forward_exp_(uGbk, hGGk, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt)
         return uGbk

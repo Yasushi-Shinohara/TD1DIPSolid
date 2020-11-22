@@ -35,3 +35,76 @@ Contains
   End Function u_h2hu
 End Subroutine uGbk_forward_RK4
 !==========================================================================================
+Subroutine uGbk_forward_exp(uGbk, hGGk, NG, Nocc, Nk, dt)
+  Implicit none
+  Complex(kind(0d0)), parameter :: zI=(0.0d0, 1.0d0)
+  Integer, intent(in) :: NG, Nocc, Nk
+  Double precision, intent(in) :: dt
+  Complex(kind(0d0)), intent(inout) :: uGbk(1:Nk,1:Nocc,1:NG)
+  Complex(kind(0d0)), intent(in) :: hGGk(1:Nk,1:NG,1:NG)
+  Integer :: ik, ig, ib
+  Complex(kind(0d0)) :: U(1:NG,1:NG)
+
+  Do ik = 1, Nk
+    U = hdt2U(hGGk(ik,:,:)*dt)
+    uGbk(ik,:,:) = U_u2Uu(U, uGbk(ik,:,:))
+  End Do
+  Return
+Contains
+  !==
+  Function hdt2U(hdt) result(U)
+    Implicit none
+    Complex(kind(0d0)), intent(in) :: hdt(1:NG, 1:NG)
+    Complex(kind(0d0)) :: U(1:NG, 1:NG)
+    Complex(kind(0d0)) :: coef(1:NG, 1:NG)
+    Double precision :: eigs(1:NG)
+    Integer :: i,j,k
+
+    U = (0.d0, 0.d0)
+    Call eigh(NG,transpose(hdt),eigs,coef) !Transpose is for the conversion from Row-major to Column-major
+    Do i = 1,NG
+      Do J = 1,NG
+        Do k = 1,NG
+          U(j,k) = U(j,k) + exp(-zI*eigs(i))*coef(j,i)*conjg(coef(k,i))
+        End Do
+      End Do
+    End Do
+    U = transpose(U)                      !Transpose is for the conversion from Column-major to Row-major 
+  End Function hdt2U
+  !==
+  Function U_u2Uu(Unitary, uorb) result(Unitaryuorb)
+    Implicit none
+    Complex(kind(0d0)), intent(in) :: uorb(1:Nocc, 1:NG), Unitary(1:NG, 1:NG)
+    Complex(kind(0d0)) :: Unitaryuorb(1:Nocc, 1:NG)
+    Integer :: i 
+
+!    Uu(1:Nocc, 1:NG) = 0.d0
+!    Do ig = 1,NG
+!      Do ib = 1,Nocc
+!        Do i = 1,NG
+!          Uu(ib,jg) = Uu(ib,ig) + U(i,ig)*u(ib,i)
+!        End Do
+!      End Do 
+!    End Do
+    Unitaryuorb = matmul(uorb,Unitary)
+  End Function U_u2Uu
+End Subroutine uGbk_forward_exp
+!==========================================================================================
+Subroutine eigh(N,H,E,V)
+  Implicit none
+  Integer, intent(in) :: N
+  Complex(kind(0d0)), intent(in) :: H(1:N, 1:N)
+  Double precision, intent(out) :: E(1:N)
+  Complex(kind(0d0)), intent(out) :: V(1:N, 1:N)
+!For ZHEEV
+  Integer :: LWORK_EV 
+  Complex(kind(0d0)) :: WORK_EV(2*(2*N-1)) !The argument is just LWORK_EV
+  Double precision :: RWORK_EV(3*N - 2)
+  Integer :: INFO_EV
+  LWORK_EV = 2*(2*N-1)
+
+  V = H
+  Call ZHEEV('V','U',N,V,N,E,WORK_EV,LWORK_EV,RWORK_EV,INFO_EV)
+    
+  Return
+End Subroutine eigh
