@@ -29,6 +29,8 @@ class RT_propagation_class():
             print('# The Runge-Kutta 4th for the temporal propagator is chosen.')
         elif ((propagator_option.upper() == 'RK4FFT') or (propagator_option.uppwer() == 'RK4_FFT')):
             uGbk_forward = self.uGbk_forward_RK4FFT
+            if (Fortlib_option):
+                uGbk_forward = self.uGbk_forward_RK4FFT_Fortran
             print('# The Runge-Kutta 4th with FFT for the temporal propagator is chosen.')
         else :
             print('# ERROR: undefined propagator_option is called.')
@@ -91,18 +93,25 @@ class RT_propagation_class():
         print('# Fortlib.so: ',dir_name+"Fortlib.so")
         self.FL = np.ctypeslib.load_library(dir_name+"Fortlib.so",".")
         self.FL.ugbk_forward_rk4_.argtypes = [
-            #np.ctypeslib.ndpointer(dtype=np.complex128), #ubk
-            #np.ctypeslib.ndpointer(dtype=np.complex128), #hGGk
-            np.ctypeslib.ndpointer(dtype='complex128'), #ubk
-            np.ctypeslib.ndpointer(dtype='complex128'), #hGGk
+            np.ctypeslib.ndpointer(dtype='complex128'),  #ubk
+            np.ctypeslib.ndpointer(dtype='complex128'),  #hGGk
             ct.POINTER(ct.c_int32),                      #NG
             ct.POINTER(ct.c_int32),                      #Nocc
             ct.POINTER(ct.c_int32),                      #Nk
             ct.POINTER(ct.c_double),]                    #dt
         self.FL.ugbk_forward_rk4_.restype = ct.c_void_p
+        self.FL.ugbk_forward_rk4fft_.argtypes = [
+            np.ctypeslib.ndpointer(dtype='complex128'),  #ubk
+            np.ctypeslib.ndpointer(dtype='complex128'),  #tGGk
+            np.ctypeslib.ndpointer(dtype='float64'),     #vx
+            ct.POINTER(ct.c_int32),                      #NG
+            ct.POINTER(ct.c_int32),                      #Nocc
+            ct.POINTER(ct.c_int32),                      #Nk
+            ct.POINTER(ct.c_double),]                    #dt
+        self.FL.ugbk_forward_rk4fft_.restype = ct.c_void_p
         self.FL.ugbk_forward_exp_.argtypes = [
-            np.ctypeslib.ndpointer(dtype='complex128'), #ubk
-            np.ctypeslib.ndpointer(dtype='complex128'), #hGGk
+            np.ctypeslib.ndpointer(dtype='complex128'),  #ubk
+            np.ctypeslib.ndpointer(dtype='complex128'),  #hGGk
             ct.POINTER(ct.c_int32),                      #NG
             ct.POINTER(ct.c_int32),                      #Nocc
             ct.POINTER(ct.c_int32),                      #Nk
@@ -111,6 +120,10 @@ class RT_propagation_class():
 
     def uGbk_forward_RK4_Fortran(self, param, uGbk, hGGk, tGGk, vx):
         self.FL.ugbk_forward_rk4_(uGbk, hGGk, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt)
+        return uGbk
+
+    def uGbk_forward_RK4FFT_Fortran(self, param, uGbk, hGGk, tGGk, vx):
+        self.FL.ugbk_forward_rk4fft_(uGbk, tGGk, vx, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt)
         return uGbk
 
     def uGbk_forward_exp_Fortran(self, param, uGbk, hGGk, tGGk, vx):

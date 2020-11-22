@@ -35,6 +35,53 @@ Contains
   End Function u_h2hu
 End Subroutine uGbk_forward_RK4
 !==========================================================================================
+Subroutine uGbk_forward_RK4FFT(uGbk, tGGk, vx, NG, Nocc, Nk, dt)
+  Implicit none
+  Complex(kind(0d0)), parameter :: zI=(0.0d0, 1.0d0)
+  Integer, intent(in) :: NG, Nocc, Nk
+  Double precision, intent(in) :: dt
+  Complex(kind(0d0)), intent(inout) :: uGbk(1:Nk,1:Nocc,1:NG)
+  Complex(kind(0d0)), intent(in) :: tGGk(1:Nk,1:NG,1:NG)
+  Double precision, intent(in) :: vx(1:NG)
+  Integer :: ik, ig, ib
+  Complex(kind(0d0)) :: k1(1:Nocc,1:NG), k2(1:Nocc,1:NG), k3(1:Nocc,1:NG), k4(1:Nocc,1:NG)
+
+  Do ik = 1, Nk
+    k1 = u_t_v2hu_FFT(uGbk(ik,:,:)              , tGGk(ik,:,:), vx)/zI
+    k2 = u_t_v2hu_FFT(uGbk(ik,:,:) + 0.5d0*dt*k1, tGGk(ik,:,:), vx)/zI
+    k3 = u_t_v2hu_FFT(uGbk(ik,:,:) + 0.5d0*dt*k2, tGGk(ik,:,:), vx)/zI
+    k4 = u_t_v2hu_FFT(uGbk(ik,:,:) + dt*k3      , tGGk(ik,:,:), vx)/zI
+    uGbk(ik,:,:) = uGbk(ik,:,:) + (k1 + 2.0d0*k2 + 2.0d0*k3 + k4)*dt/6.0d0
+  End Do
+  Return
+Contains
+  Function u_t_v2hu_FFT(u, t, vx) result(hu)
+    Implicit none
+    Complex(kind(0d0)), intent(in) :: u(1:Nocc, 1:NG), t(1:NG, 1:NG)
+    Double precision, intent(in) :: vx(1:NG)
+    Complex(kind(0d0)) :: hu(1:Nocc, 1:NG), tu(1:Nocc, 1:NG), ux(1:Nocc, 1:NG), vux(1:Nocc, 1:NG), vu(1:Nocc, 1:NG)
+    Integer :: i, ib
+!For FFTW
+    Integer(8) :: planf, planb
+    Complex(kind(0d0)) :: work1(1:NG), work2(1:NG)
+    Include 'fftw3.f'
+
+    Call dfftw_plan_dft_1d(planf, NG, work1, work2, FFTW_FORWARD, FFTW_ESTIMATE)
+    Call dfftw_plan_dft_1d(planb, NG, work2, work1, FFTW_BACKWARD, FFTW_ESTIMATE)
+    Do ig = 1,NG
+      tu(:,ig) = t(ig,ig)*u(:,ig)
+    End Do
+    Do ib = 1,Nocc
+      Call dfftw_execute_dft(planb,u(ib,:),ux(ib,:)) !iFFT ux <= u
+      vux(ib,:) = vx(:)*ux(ib,:)
+      Call dfftw_execute_dft(planf,vux(ib,:),vu(ib,:)) !FFT vux => vu
+    End Do
+    vu = vu/float(NG)
+    
+    hu = tu + vu
+  End Function u_t_v2hu_FFT
+End Subroutine uGbk_forward_RK4FFT
+!==========================================================================================
 Subroutine uGbk_forward_exp(uGbk, hGGk, NG, Nocc, Nk, dt)
   Implicit none
   Complex(kind(0d0)), parameter :: zI=(0.0d0, 1.0d0)
