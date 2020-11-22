@@ -11,6 +11,10 @@ class RT_propagation_class():
     def __init__(self):
         self.something = None
         self.FL = None
+        self.ref_NG = None
+        self.ref_Nocc = None
+        self.ref_Nk = None
+        self.ref_dt = None
 
     def uGbk_forward(self, propagator_option, Fortlib_option):
         if (propagator_option.lower() == 'exp'):
@@ -77,19 +81,21 @@ class RT_propagation_class():
 
 
     def Prep4Fortlib(self, param):
-        self.ref_NG = ct.byref(ct.c_int64(param.NG))
-        self.ref_Nocc = ct.byref(ct.c_int64(param.Nocc))
-        self.ref_Nk = ct.byref(ct.c_int64(param.Nk))
-        self.ref_dt = ct.byref(ct.c_double(param.dt))
+        self.ref_NG   = ct.byref(ct.c_int32(param.NG)  )
+        self.ref_Nocc = ct.byref(ct.c_int32(param.Nocc))
+        self.ref_Nk   = ct.byref(ct.c_int32(param.Nk)  )
+        self.ref_dt   = ct.byref(ct.c_double(param.dt) )
         dir_name = os.path.dirname(os.path.abspath(__file__)).strip('modules')
         print('# Fortlib.so: ',dir_name+"Fortlib.so")
         self.FL = np.ctypeslib.load_library(dir_name+"Fortlib.so",".")
         self.FL.ugbk_forward_rk4_.argtypes = [
-            np.ctypeslib.ndpointer(dtype=np.complex128), #ubk
-            np.ctypeslib.ndpointer(dtype=np.complex128), #hGGk
-            ct.POINTER(ct.c_int64),                      #NG
-            ct.POINTER(ct.c_int64),                      #Nocc
-            ct.POINTER(ct.c_int64),                      #Nk
+            #np.ctypeslib.ndpointer(dtype=np.complex128), #ubk
+            #np.ctypeslib.ndpointer(dtype=np.complex128), #hGGk
+            np.ctypeslib.ndpointer(dtype='complex128'), #ubk
+            np.ctypeslib.ndpointer(dtype='complex128'), #hGGk
+            ct.POINTER(ct.c_int32),                      #NG
+            ct.POINTER(ct.c_int32),                      #Nocc
+            ct.POINTER(ct.c_int32),                      #Nk
             ct.POINTER(ct.c_double),]                    #dt
         self.FL.ugbk_forward_rk4_.restype = ct.c_void_p
 

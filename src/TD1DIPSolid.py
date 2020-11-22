@@ -57,8 +57,8 @@ print('######################################')
 
 if (param.temperature < 0.0):
     occbk[0:param.Nocc,:] = 2.0/float(param.Nk)
-    uGbk = uGbk[:,0:param.Nocc,:]
-    occbk = occbk[0:param.Nocc,:]
+    uGbk = 1.0*uGbk[:,0:param.Nocc,:] #This "1.0*" is mandatory for calling propelry Fortran subroutin via ctypes, MAKING NEW ARRAY specification
+    occbk = 1.0*occbk[0:param.Nocc,:]
     print('# The system is assumed to be zero-temperature insulator. ')
 else :
     print('# ERROR: Currenty, finite-temperature occupation distribution is not supported.')
@@ -106,8 +106,7 @@ for it in range(param.Nt):
         tGGk = get_tGGk(param,A[it])
     hGGk = tGGk + vGGk
     uGbk = uGbk_forward(param, uGbk, hGGk, tGGk, vx)
-    #if (it%1000 == 0):
-    if (it%1 == 0): #DEBUG
+    if (it%1000 == 0):
         dns = occ_u2dns(param,occbk,uGbk)
         print(it,np.sum(dns)*param.H, J[it], Ene[it])
 
