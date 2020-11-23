@@ -147,7 +147,6 @@ class parameter_class:
                     if (str(text[i]) == 'E0'):
                         temp = text[i+1].split()
                         self.E0 = np.array(temp,dtype='float64')
-                        print(self.E0)
                         if (len(self.E0) != self.Ncolor):
                             print('Error: Number of argmeunt in E0 is wrong.')
                             sys.exit()
