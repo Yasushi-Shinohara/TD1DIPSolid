@@ -1,3 +1,20 @@
+Subroutine Writeout_OMPinfo(Nk)
+  Use Omp_lib
+  Implicit none
+  Integer, intent(in) :: Nk
+  Integer :: NOMP
+
+  !$ NOMP = omp_get_max_threads()
+  !$ Write(*,'("# ++++++++++++++++++++++++++++")') 
+  !$ Write(*,'("# Number of OpenMP thread =",i8)')  NOMP
+  !$ If (Nk < NOMP) then
+  !$   Write(*,'("# CAUTION: OMP parallelization is not efficient because of Nk < NOMP.")')
+  !$ End If
+  !$ Write(*,'("# ++++++++++++++++++++++++++++")') 
+ 
+  Return
+End Subroutine Writeout_OMPinfo
+!==========================================================================================
 Subroutine uGbk_forward_RK4(uGbk, hGGk, NG, Nocc, Nk, dt)
   Implicit none
   Complex(kind(0d0)), parameter :: zI=(0.0d0, 1.0d0)
@@ -8,6 +25,8 @@ Subroutine uGbk_forward_RK4(uGbk, hGGk, NG, Nocc, Nk, dt)
   Integer :: ik, ig, ib
   Complex(kind(0d0)) :: k1(1:Nocc,1:NG), k2(1:Nocc,1:NG), k3(1:Nocc,1:NG), k4(1:Nocc,1:NG)
 
+  !$omp parallel
+  !$omp do private(ik,k1,k2,k3,k4)
   Do ik = 1, Nk
     k1 = u_h2hu(uGbk(ik,:,:)              , hGGk(ik,:,:))/zI
     k2 = u_h2hu(uGbk(ik,:,:) + 0.5d0*dt*k1, hGGk(ik,:,:))/zI
@@ -15,6 +34,8 @@ Subroutine uGbk_forward_RK4(uGbk, hGGk, NG, Nocc, Nk, dt)
     k4 = u_h2hu(uGbk(ik,:,:) + dt*k3      , hGGk(ik,:,:))/zI
     uGbk(ik,:,:) = uGbk(ik,:,:) + (k1 + 2.0d0*k2 + 2.0d0*k3 + k4)*dt/6.0d0
   End Do
+  !$omp end do
+  !$omp end parallel
   Return
 Contains
   Function u_h2hu(u, h) result(hu)
@@ -46,6 +67,8 @@ Subroutine uGbk_forward_RK4FFT(uGbk, tGGk, vx, NG, Nocc, Nk, dt)
   Integer :: ik, ig, ib
   Complex(kind(0d0)) :: k1(1:Nocc,1:NG), k2(1:Nocc,1:NG), k3(1:Nocc,1:NG), k4(1:Nocc,1:NG)
 
+  !$omp parallel
+  !$omp do private(ik,k1,k2,k3,k4)
   Do ik = 1, Nk
     k1 = u_t_v2hu_FFT(uGbk(ik,:,:)              , tGGk(ik,:,:), vx)/zI
     k2 = u_t_v2hu_FFT(uGbk(ik,:,:) + 0.5d0*dt*k1, tGGk(ik,:,:), vx)/zI
@@ -53,6 +76,8 @@ Subroutine uGbk_forward_RK4FFT(uGbk, tGGk, vx, NG, Nocc, Nk, dt)
     k4 = u_t_v2hu_FFT(uGbk(ik,:,:) + dt*k3      , tGGk(ik,:,:), vx)/zI
     uGbk(ik,:,:) = uGbk(ik,:,:) + (k1 + 2.0d0*k2 + 2.0d0*k3 + k4)*dt/6.0d0
   End Do
+  !$omp end do
+  !$omp end parallel
   Return
 Contains
   Function u_t_v2hu_FFT(u, t, vx) result(hu)
@@ -79,6 +104,8 @@ Contains
     vu = vu/float(NG)
     
     hu = tu + vu
+    Call dfftw_destroy_plan(planf)
+    Call dfftw_destroy_plan(planb)
   End Function u_t_v2hu_FFT
 End Subroutine uGbk_forward_RK4FFT
 !==========================================================================================
@@ -92,10 +119,14 @@ Subroutine uGbk_forward_exp(uGbk, hGGk, NG, Nocc, Nk, dt)
   Integer :: ik, ig, ib
   Complex(kind(0d0)) :: U(1:NG,1:NG)
 
+  !$omp parallel
+  !$omp do private(ik,U)
   Do ik = 1, Nk
     U = hdt2U(hGGk(ik,:,:)*dt)
     uGbk(ik,:,:) = U_u2Uu(U, uGbk(ik,:,:))
   End Do
+  !$omp end do
+  !$omp end parallel
   Return
 Contains
   !==

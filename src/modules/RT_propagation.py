@@ -117,6 +117,10 @@ class RT_propagation_class():
             ct.POINTER(ct.c_int32),                      #Nk
             ct.POINTER(ct.c_double),]                    #dt
         self.FL.ugbk_forward_exp_.restype = ct.c_void_p
+        self.FL.writeout_ompinfo_.argtypes = [
+            ct.POINTER(ct.c_int32),]                     #Nk
+        self.FL.writeout_ompinfo_.restype = ct.c_void_p
+        self.FL.writeout_ompinfo_(self.ref_Nk)
 
     def uGbk_forward_RK4_Fortran(self, param, uGbk, hGGk, tGGk, vx):
         self.FL.ugbk_forward_rk4_(uGbk, hGGk, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt)
