@@ -10,7 +10,7 @@ class parameter_class:
         # Default values for the parameters
         ## system
         self.sys_name = ''            #Prefix of the output files
-        self.cluster_mode = False
+        self.plot_figure_option = False
         self.PC_option = True         #Predictor-corrector option
         self.minimal_output = True    #A flag to write-out minimal data or not
         self.Fortlib_option = False   #A flag to use Fortran acceleration by using "Fortlib"
@@ -58,11 +58,11 @@ class parameter_class:
             for i in range(Nlen):
                 if (str(text[i]) == 'sys_name'):
                     self.sys_name = text[i+1].split()[0]
-                if (str(text[i]) == 'cluster_mode'):
+                if (str(text[i]) == 'plot_figure_option'):
                     if (str(text[i+1]) == 'True'):
-                        self.cluster_mode = True
+                        self.plot_figure_option = True
                     else:
-                        self.cluster_mode = False
+                        self.plot_figure_option = False
                 if (str(text[i]) == 'PC_option'):
                     if (str(text[i+1]) == 'True'):
                         self.PC_option = True
@@ -156,7 +156,7 @@ class parameter_class:
         
         print('#=====Print the parmeters')
         print('# sys_name =', self.sys_name)
-        print('# cluster_mode =', self.cluster_mode)
+        print('# plot_figure_option =', self.plot_figure_option)
         print('# PC_option =', self.PC_option)
         print('# minimal_output =', self.minimal_output)
         print('# Fortlib_option =', self.Fortlib_option)

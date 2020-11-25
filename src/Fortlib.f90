@@ -81,6 +81,37 @@ Subroutine uGbk_forward_RK4FFT(uGbk, tGGk, vx, NG, Nocc, Nk, dt)
   Return
 Contains
   Function u_t_v2hu_FFT(u, t, vx) result(hu)
+    Use, intrinsic :: iso_c_binding
+    Implicit none
+    Complex(kind(0d0)), intent(in) :: u(1:Nocc, 1:NG), t(1:NG, 1:NG)
+    Double precision, intent(in) :: vx(1:NG)
+    Complex(kind(0d0)) :: hu(1:Nocc, 1:NG), tu(1:Nocc, 1:NG), ux(1:Nocc, 1:NG), vux(1:Nocc, 1:NG), vu(1:Nocc, 1:NG)
+    Integer :: i, ib
+!For FFTW
+    Type(C_PTR) :: planf, planb
+    Complex(C_DOUBLE_COMPLEX) :: uwork(1:Nocc, 1:NG)
+    Include 'fftw3.f03'
+
+    planf = fftw_plan_dft_1d(NG, uwork(ib,:), ux(ib,:), FFTW_FORWARD, FFTW_ESTIMATE)
+    planb = fftw_plan_dft_1d(NG, ux(ib,:), uwork(ib,:), FFTW_BACKWARD, FFTW_ESTIMATE)
+
+    uwork(:,:) = u(:,:) !INTENT = IN variable can not be substituted directly in the fftw_execute_dft without clear reasons
+    Do ig = 1,NG
+      tu(:,ig) = t(ig,ig)*u(:,ig)
+    End Do
+    Do ib = 1,Nocc
+      Call fftw_execute_dft(planb,uwork(ib,:),ux(ib,:)) !iFFT ux <= u
+      vux(ib,:) = vx(:)*ux(ib,:)
+      Call fftw_execute_dft(planf,vux(ib,:),vu(ib,:)) !FFT vux => vu
+    End Do
+    vu = vu/float(NG)
+    
+    hu = tu + vu
+    Call fftw_destroy_plan(planf)
+    Call fftw_destroy_plan(planb)
+  End Function u_t_v2hu_FFT
+  !==
+  Function u_t_v2hu_FFT_old(u, t, vx) result(hu)
     Implicit none
     Complex(kind(0d0)), intent(in) :: u(1:Nocc, 1:NG), t(1:NG, 1:NG)
     Double precision, intent(in) :: vx(1:NG)
@@ -106,7 +137,7 @@ Contains
     hu = tu + vu
     Call dfftw_destroy_plan(planf)
     Call dfftw_destroy_plan(planb)
-  End Function u_t_v2hu_FFT
+  End Function u_t_v2hu_FFT_old
 End Subroutine uGbk_forward_RK4FFT
 !==========================================================================================
 Subroutine uGbk_forward_exp(uGbk, hGGk, NG, Nocc, Nk, dt)
