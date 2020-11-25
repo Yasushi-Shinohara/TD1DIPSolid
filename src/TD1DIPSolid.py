@@ -28,7 +28,7 @@ RTc = RT_propagation_class()
 uGbk_forward = RTc.uGbk_forward(param.propagator_option, param.Fortlib_option)
 RTc.Prep4Fortlib(param)
 
-if (not param.cluster_mode): #Matplotlib is activated for the cluster_mode == True
+if (param.plot_figure_option): #Matplotlib is activated for the cluster_mode == True
     import matplotlib.pyplot as plt
     from matplotlib import cm #To include color map
 
@@ -38,7 +38,7 @@ epsbk = np.zeros([param.NG, param.Nk],dtype='float64') #Eigenvalue of the Hamilt
 occbk = np.zeros([param.NG, param.Nk],dtype='float64') #Occupation number
 
 vx, vG, vGG, vGGk = get_vxvGvGGvGGk(param)
-if(not param.cluster_mode):
+if(param.plot_figure_option):
     plot_potential(plt,cm, param, vx)
 tGGk = get_tGGk(param,0.0)
 hGGk = tGGk + vGGk
@@ -49,7 +49,7 @@ for ik in range(param.Nk):
 uGbk = uGbk/np.sqrt(param.a)*float(param.NG) #Normalization
 Eg = np.amin(epsbk[param.Nocc,:])-np.amax(epsbk[param.Nocc - 1,:])
 print('# Eg = '+str(Eg)+' a.u. = '+str(Hartree*Eg)+' eV')
-if (not param.cluster_mode):
+if (param.plot_figure_option):
     plot_band(plt,cm, param, epsbk)
 
 print('# Band calculation is done properly.    ')
@@ -88,7 +88,7 @@ J = np.zeros([param.Nt],dtype=np.float64)
 if (np.amax(t) < np.amax(param.Tpulse)):
     print('# WARNING: max(t) is shorter than Tpulse')
         
-if (not param.cluster_mode):
+if (param.plot_figure_option):
     plot_AE(plt,cm, param,t,A,E) #Plot shape of the electric field
 
 tt = time.time()
@@ -113,7 +113,7 @@ for it in range(param.Nt):
 print('# System energy at end:',Ene[param.Nt-1], '[a.u.] =',Ene[param.Nt-1]*Hartree, ' [eV]')
 print('# Absorbed energy:',Ene[param.Nt-1]-Ene[0], '[a.u.] =',(Ene[param.Nt-1]-Ene[0])*Hartree, ' [eV]')
 
-if (not param.cluster_mode):
+if (param.plot_figure_option):
     plot_RT(plt,cm, t,J,Ene) #Plot data obtained in real-time evolution, J, Ene
 
 te = time.time()
