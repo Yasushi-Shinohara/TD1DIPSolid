@@ -8,6 +8,7 @@ Most part is written in python. A Fortran library is attached to accelerate the 
 * numpy
 * matplotlib
 * A Fortran compiler, just checked with gfortran (gcc version 9.3.0)
+  BLAS, LAPACK, FFTW are required for the Fortran library compile
 
 # Author
 
