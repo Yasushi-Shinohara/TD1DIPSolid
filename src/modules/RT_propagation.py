@@ -27,11 +27,13 @@ class RT_propagation_class():
             if (Fortlib_option):
                 uGbk_forward = self.uGbk_forward_RK4_Fortran
             print('# The Runge-Kutta 4th for the temporal propagator is chosen.')
-        elif ((propagator_option.upper() == 'RK4FFT') or (propagator_option.uppwer() == 'RK4_FFT')):
+        elif ((propagator_option.upper() == 'RK4FFT') or (propagator_option.upper() == 'RK4_FFT')):
             uGbk_forward = self.uGbk_forward_RK4FFT
             if (Fortlib_option):
                 uGbk_forward = self.uGbk_forward_RK4FFT_Fortran
             print('# The Runge-Kutta 4th with FFT for the temporal propagator is chosen.')
+        elif (propagator_option.upper() == 'KS'):
+            uGbk_forward = self.uGbk_forward_KS
         else :
             print('# ERROR: undefined propagator_option is called.')
             sys.exit()
@@ -83,6 +85,84 @@ class RT_propagation_class():
             uGbk[:,:,ik] = uGbk[:,:,ik] + (k1 + 2.0*k2 + 2.0*k3 + k4)*param.dt/6.0 
         return uGbk
 
+    def uGbk_forward_KS(self, param, uGbk, hGGk, tGGk, vx):
+        tGGdiagk = np.diagonal(tGGk, axis1 = 0, axis2 = 1).T
+        for ik in range(param.Nk):
+            #U = self.u_hdt2U_KS(uGbk[:,:,ik], hGGk[:,:,ik]*param.dt, NKS = param.NKS)                    #An option
+            #U = self.u_tt_vt2U_KS(uGbk[:,:,ik], tGGdiagk[:,ik]*param.dt, vx*param.dt, NKS = param.NKS)   #An option
+            U = self.u_hdt_G2U_KS(uGbk[:,:,ik], hGGk[:,:,ik]*param.dt, param.G, NKS = param.NKS)         #An option
+            uGbk[:,:,ik] = np.dot(U, uGbk[:,:,ik])
+        return uGbk
+
+    def u_tt_vt2U_KS(self, u, tdiagt, vt, NKS = 4):
+        k = 1.0*u
+        ktemp = 1.0*u
+        nKS = np.shape(ktemp)[1]
+        while (nKS < NKS):
+            ktemp = self.u_t_v2hu_FFT(ktemp, tdiagt, vt)
+            k = np.hstack((k, ktemp))
+            nKS = np.shape(k)[1]
+        q, r = np.linalg.qr(k)
+
+        hdtr = np.dot(np.conj(q).T, self.u_t_v2hu_FFT(q, tdiagt, vt))
+        eigs, coef = np.linalg.eigh(hdtr)
+        Ur = np.exp(-zI*eigs[0])*np.outer(coef[:,0],np.conj(coef[:,0]))
+        for i in range(1,len(eigs)):
+            Ur = Ur + np.exp(-zI*eigs[i])*np.outer(coef[:,i],np.conj(coef[:,i]))
+
+        U = np.dot(q, np.dot(Ur , np.conj(q).T))
+        return U
+
+    def u_hdt_G2U_KS(self, u, hdt, G, NKS = 4):
+        k = 1.0*u
+        ktemp = 1.0*u
+        Nocc = np.shape(u)[1]
+        nKS = np.shape(ktemp)[1]
+        while (nKS < NKS):  #Making Krylov subspace (KS) up to a dimension of NKS via G-matrix.
+            for ib in range(Nocc):
+                ktemp[:,ib] = G[:]*ktemp[:,ib]
+            k = np.hstack((k, ktemp))
+            nKS = np.shape(k)[1]
+        q, r = np.linalg.qr(k)
+
+        hdtr = np.dot(np.conj(q).T, self.u_h2hu(q, hdt))
+        eigs, coef = np.linalg.eigh(hdtr)
+        Ur = np.exp(-zI*eigs[0])*np.outer(coef[:,0],np.conj(coef[:,0]))  #Constructing a unitary operator in the KS
+        for i in range(1,len(eigs)):
+            Ur = Ur + np.exp(-zI*eigs[i])*np.outer(coef[:,i],np.conj(coef[:,i]))
+
+        U = np.dot(q, np.dot(Ur , np.conj(q).T)) #Converting the subspace representation to the original space
+        return U
+
+    def u_hdt2U_KS(self, u, hdt, NKS = 4):
+        k = 1.0*u
+        ktemp = 1.0*u
+        nKS = np.shape(ktemp)[1]
+        while (nKS < NKS):
+            ktemp = self.u_h2hu(ktemp, hdt)
+            k = np.hstack((k, ktemp))
+            nKS = np.shape(k)[1]
+        q, r = np.linalg.qr(k)
+
+        hdtr = np.dot(np.conj(q).T, self.u_h2hu(q, hdt))
+        eigs, coef = np.linalg.eigh(hdtr)
+        Ur = np.exp(-zI*eigs[0])*np.outer(coef[:,0],np.conj(coef[:,0]))
+        for i in range(1,len(eigs)):
+            Ur = Ur + np.exp(-zI*eigs[i])*np.outer(coef[:,i],np.conj(coef[:,i]))
+
+        #NG = np.shape(u)[0]
+        #U = 0.0*hdt
+        #for iG in range(NG):
+        #    for jG in range(NG):
+        #        for i in range(len(eigs)):
+        #            for j in range(len(eigs)):
+        #                U[iG, jG] = U[iG, jG] + q[iG,i]*Ur[i,j]*np.conj(q[jG,j])
+        #for iG in range(NG):
+        #    for jG in range(NG):
+        #        U[iG, jG] = np.dot(q[iG,:], np.dot(Ur, np.conj(q[jG,:])))
+
+        U = np.dot(q, np.dot(Ur , np.conj(q).T))
+        return U
 
     def Prep4Fortlib(self, param):
         self.ref_NG   = ct.byref(ct.c_int32(param.NG)  )

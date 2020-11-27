@@ -32,6 +32,7 @@ class parameter_class:
         self.propagator_option = 'exp'        #The size of the time-step
         self.dt = 5.0e-1              #The size of the time-step
         self.Nt = 4000                #The number of time steps
+        self.NKS = 8                  #Number of the subspae in KS construction with "KS" propagator
         ## Field parameters
         self.Ncolor = 1               #Number of color for the field
         self.omegac = 0.3875/Hartree  #Photon energy  [a.u.]
@@ -100,6 +101,8 @@ class parameter_class:
                     self.dt = float(str(text[i+1]))
                 if (str(text[i]) == 'Nt'):
                     self.Nt = int(str(text[i+1]))
+                if (str(text[i]) == 'NKS'):
+                    self.NKS = int(str(text[i+1]))
 
                 if (str(text[i]) == 'Ncolor'):
                     self.Ncolor = int(str(text[i+1]))
@@ -154,6 +157,11 @@ class parameter_class:
             print('Error: Number of argmeunt is wrong.')
             sys.exit()
         
+        if (self.NKS > self.NG):
+            print('# NOTICE: NKS is larger than the size of the Hilbert space, NG. ')
+            print('# NKS is replaced by NG ')
+            self.NKS = 1*self.NG
+
         print('#=====Print the parmeters')
         print('# sys_name =', self.sys_name)
         print('# plot_figure_option =', self.plot_figure_option)
@@ -175,6 +183,7 @@ class parameter_class:
         print('# Nt =', self.Nt) 
         print('# Nt*dt =', self.Nt*self.dt, '[a.u.] =', self.Nt*self.dt*Atomtime, '[fs]')
         print('# 2pi/(Nt*dt) =', tpi/(self.Nt*self.dt), '[a.u.] =', tpi/(self.Nt*self.dt)*Hartree, '[eV]')
+        print('# NKS =', self.NKS)
         print('# ')
         print('# Number of color: Ncolor = ', self.Ncolor)
         if (self.Ncolor == 1):
