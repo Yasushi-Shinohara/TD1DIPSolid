@@ -34,6 +34,8 @@ class RT_propagation_class():
             print('# The Runge-Kutta 4th with FFT for the temporal propagator is chosen.')
         elif (propagator_option.upper() == 'KS'):
             uGbk_forward = self.uGbk_forward_KS
+            if (Fortlib_option):
+                uGbk_forward = self.uGbk_forward_KS_Fortran
         else :
             print('# ERROR: undefined propagator_option is called.')
             sys.exit()
@@ -87,12 +89,35 @@ class RT_propagation_class():
 
     def uGbk_forward_KS(self, param, uGbk, hGGk, tGGk, vx):
         tGGdiagk = np.diagonal(tGGk, axis1 = 0, axis2 = 1).T
+        O = np.diag(param.G)
+        Odiag = 1.0*param.G
         for ik in range(param.Nk):
             #U = self.u_hdt2U_KS(uGbk[:,:,ik], hGGk[:,:,ik]*param.dt, NKS = param.NKS)                    #An option
             #U = self.u_tt_vt2U_KS(uGbk[:,:,ik], tGGdiagk[:,ik]*param.dt, vx*param.dt, NKS = param.NKS)   #An option
-            U = self.u_hdt_G2U_KS(uGbk[:,:,ik], hGGk[:,:,ik]*param.dt, param.G, NKS = param.NKS)         #An option
+            U = self.u_hdt_Odiag2U_KS(uGbk[:,:,ik], hGGk[:,:,ik]*param.dt, Odiag, NKS = param.NKS)         #An option
+            #U = self.u_hdt_O2U_KS(uGbk[:,:,ik], hGGk[:,:,ik]*param.dt, O, NKS = param.NKS)         #An option
             uGbk[:,:,ik] = np.dot(U, uGbk[:,:,ik])
         return uGbk
+
+    def u_hdt_O2U_KS(self, u, hdt, O, NKS = 4):
+        k = 1.0*u
+        ktemp = 1.0*u
+        Nocc = np.shape(u)[1]
+        nKS = np.shape(ktemp)[1]
+        while (nKS < NKS):  #Making Krylov subspace (KS) up to a dimension of NKS via G-matrix.
+            ktemp = np.dot(O,ktemp)
+            k = np.hstack((k, ktemp))
+            nKS = np.shape(k)[1]
+        q, r = np.linalg.qr(k)
+
+        hdtr = np.dot(np.conj(q).T, self.u_h2hu(q, hdt))
+        eigs, coef = np.linalg.eigh(hdtr)
+        Ur = np.exp(-zI*eigs[0])*np.outer(coef[:,0],np.conj(coef[:,0]))  #Constructing a unitary operator in the KS
+        for i in range(1,len(eigs)):
+            Ur = Ur + np.exp(-zI*eigs[i])*np.outer(coef[:,i],np.conj(coef[:,i]))
+
+        U = np.dot(q, np.dot(Ur , np.conj(q).T)) #Converting the subspace representation to the original space
+        return U
 
     def u_tt_vt2U_KS(self, u, tdiagt, vt, NKS = 4):
         k = 1.0*u
@@ -113,14 +138,15 @@ class RT_propagation_class():
         U = np.dot(q, np.dot(Ur , np.conj(q).T))
         return U
 
-    def u_hdt_G2U_KS(self, u, hdt, G, NKS = 4):
+ 
+    def u_hdt_Odiag2U_KS(self, u, hdt, Odiag, NKS = 4):
         k = 1.0*u
         ktemp = 1.0*u
         Nocc = np.shape(u)[1]
         nKS = np.shape(ktemp)[1]
         while (nKS < NKS):  #Making Krylov subspace (KS) up to a dimension of NKS via G-matrix.
             for ib in range(Nocc):
-                ktemp[:,ib] = G[:]*ktemp[:,ib]
+                ktemp[:,ib] = Odiag[:]*ktemp[:,ib]
             k = np.hstack((k, ktemp))
             nKS = np.shape(k)[1]
         q, r = np.linalg.qr(k)
@@ -197,6 +223,17 @@ class RT_propagation_class():
             ct.POINTER(ct.c_int32),                      #Nk
             ct.POINTER(ct.c_double),]                    #dt
         self.FL.ugbk_forward_exp_.restype = ct.c_void_p
+        #self.FL.ugbk_forward_ks_.argtypes = [
+        #    np.ctypeslib.ndpointer(dtype='complex128'),  #ubk
+        #    np.ctypeslib.ndpointer(dtype='complex128'),  #tGGk
+        #    np.ctypeslib.ndpointer(dtype='float64'),     #vx
+        #    np.ctypeslib.ndpointer(dtype='complex128'),  #O
+        #    ct.POINTER(ct.c_int32),                      #NG
+        #    ct.POINTER(ct.c_int32),                      #Nocc
+        #    ct.POINTER(ct.c_int32),                      #Nk
+        #    ct.POINTER(ct.c_double),                     #dt
+        #    ct.POINTER(ct.c_int32),]                     #NKS
+        #self.FL.ugbk_forward_ks_.restype = ct.c_void_p
         self.FL.writeout_ompinfo_.argtypes = [
             ct.POINTER(ct.c_int32),]                     #Nk
         self.FL.writeout_ompinfo_.restype = ct.c_void_p
@@ -213,3 +250,8 @@ class RT_propagation_class():
     def uGbk_forward_exp_Fortran(self, param, uGbk, hGGk, tGGk, vx):
         self.FL.ugbk_forward_exp_(uGbk, hGGk, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt)
         return uGbk
+
+    #def uGbk_forward_KS_Fortran(self, param, uGbk, hGGk, tGGk, vx):
+        #O = np.diag(param.G + 0.0j)
+        #self.FL.ugbk_forward_ks_(uGbk, tGGk, vx, O, self.ref_NG, self.ref_Nocc, self.ref_Nk, self.ref_dt, self.ref_NKS)
+        #return uGbk
